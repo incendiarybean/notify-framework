@@ -12,12 +12,12 @@ Use [NPM](https://www.npmjs.com/) to install it and the other 2 requirements wit
 npm install @incendiarybean/notify-framework tailwindcss animate.css --save
 ```
 
-## Usage
+# Usage
 Import the module:
 ```javascript
 import { Notify } from '@incendiarybean/notify-framework';
 ```
-# Making a large popup notification with buttons:
+## Making a large popup notification with buttons:
 ```javascript
 let content = {
     title:"This is a title",
@@ -67,7 +67,7 @@ This is where you define what the button does, in options you can see the differ
 
 This dismiss button will close the window, resolve the promise, won't reload the page and the returned resolution of the promise is "ACTION": "Dismissed". The button is also red.
 
-# Making a small slide from the side notification:
+## Making a small slide from the side notification:
 ```javascript
 let content = {
     title:"This is a title",
