@@ -17,6 +17,9 @@ Import the module:
 ```javascript
 import { Notify } from '@incendiarybean/notify-framework';
 ```
+
+Try the [Demo](https://github.com/incendiarybean/notify-framework-demo)
+
 ## Making a large popup notification with buttons:
 ```javascript
 let content = {
