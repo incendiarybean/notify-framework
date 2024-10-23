@@ -1,59 +1,52 @@
 {
-  "_from": "@incendiarybean/notify-framework",
-  "_id": "@incendiarybean/notify-framework@0.0.1",
-  "_inBundle": false,
-  "_integrity": "sha512-x4OhTMCoK/EzAvZrBQN7RN+oQFyY3Dwy15lXbxD+NO6xo9bp1NumhD+y11DoezggOhJF18vy2+/cHpXPiC7Kjg==",
-  "_location": "/@incendiarybean/notify-framework",
-  "_requested": {
-    "type": "tag",
-    "registry": true,
-    "raw": "@incendiarybean/notify-framework",
-    "name": "@incendiarybean/notify-framework",
-    "escapedName": "@incendiarybean%2fnotify-framework",
-    "scope": "@incendiarybean",
-    "rawSpec": "",
-    "saveSpec": null,
-    "fetchSpec": "latest"
-  },
-  "_requiredBy": [
-    "#USER",
-    "/"
-  ],
-  "_resolved": "https://registry.npmjs.org/@incendiarybean/notify-framework/-/notify-framework-0.0.1.tgz",
-  "_shasum": "52ddbbb510dcb92c9bf2b5fa3057709b294f87e0",
-  "_spec": "@incendiarybean/notify-framework",
-  "_where": "/var/www/work-testing - Copy",
-  "author": {
-    "name": "Benjamin Weare"
-  },
-  "bugs": {
-    "url": "https://github.com/incendiarybean/notify-framework/issues"
-  },
-  "bundleDependencies": false,
-  "deprecated": false,
-  "description": "This is a lightweight framework for creating notifications, using TAILWIND and Animate.CSS",
-  "devDependencies": {},
-  "homepage": "https://github.com/incendiarybean/notify-framework#readme",
-  "keywords": [
-    "framework",
-    "javascript",
-    "js",
-    "css",
-    "tailwindcss",
-    "tailwind",
-    "animate.css",
-    "notifications"
-  ],
-  "license": "ISC",
-  "main": "src/index.js",
-  "name": "@incendiarybean/notify-framework",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/incendiarybean/notify-framework.git"
-  },
-  "scripts": {
-    "test": "node ."
-  },
-  "version": "0.1.1",
-  "dependencies": {}
+	"name": "@incendiarybean/notify-framework",
+	"version": "0.2.9",
+	"description": "This is a lightweight framework for creating notifications.",
+	"source": "src/index.ts",
+	"module": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/incendiarybean/notify-framework.git"
+	},
+	"scripts": {
+		"build": "npm run build:css && parcel build",
+		"build:css": "npx tailwindcss -i ./src/base.css -o ./src/min.css --minify"
+	},
+	"publishConfig": {
+		"registry": "https://registry.npmjs.org/"
+	},
+	"bugs": {
+		"url": "https://github.com/incendiarybean/notify-framework/issues"
+	},
+	"homepage": "https://github.com/incendiarybean/notify-framework#readme",
+	"keywords": [
+		"framework",
+		"javascript",
+		"js",
+		"css",
+		"tailwindcss",
+		"tailwind",
+		"notifications"
+	],
+	"author": "Benjamin Weare",
+	"license": "ISC",
+	"devDependencies": {
+		"@eslint/js": "^9.13.0",
+		"@parcel/packager-ts": "^2.12.0",
+		"@parcel/transformer-typescript-types": "^2.12.0",
+		"animate.css": "^4.1.1",
+		"autoprefixer": "^10.4.20",
+		"eslint": "^9.13.0",
+		"eslint-config-prettier": "^9.1.0",
+		"globals": "^15.11.0",
+		"parcel": "^2.12.0",
+		"postcss": "^8.4.47",
+		"tailwindcss": "^3.4.14",
+		"typescript": "^5.6.3",
+		"typescript-eslint": "^8.11.0"
+	},
+	"files": [
+		"dist/*"
+	]
 }
