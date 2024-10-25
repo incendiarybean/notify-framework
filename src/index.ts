@@ -18,47 +18,138 @@ type NotificationColour =
 	| 'amber'
 	| 'voilet';
 
-type NotifyConfig = {
+type NotifyBody = {
 	title: string;
-	body: string;
+	body?: string;
 	colour: NotificationColour;
 	options?: string[];
 	position?: NotificationPosition[];
 	time?: number;
 };
 
+type NotificationConfig = {
+	[key: string]: {
+		[key: string]: {
+			options: string[];
+			colour: string;
+			close?: boolean;
+			promise?: {
+				ACTION: string;
+			};
+			reload?: boolean;
+			callback?: (resolve: any, reject: any) => void;
+		};
+	};
+};
+
 export type NotificationSlideDirection = 'Left' | 'Right' | undefined;
 
-const defaultConfig: any = {
+const maxNotificationTemplate: string = `
+	<div class="leading-loose w-1/4 REPLACE_STYLE">
+		<div
+			draggable="true"
+			class="cursor-grab active:cursor-grabbing w-full flex justify-end bg-REPLACE_COLOUR-500 p-1 rounded-t"
+		>
+			<svg
+				id="Dismiss"
+				height="21"
+				viewBox="0 0 21 21"
+				width="21"
+				xmlns="http://www.w3.org/2000/svg"
+			>
+				<g
+					fill="none"
+					fill-rule="evenodd"
+					stroke="#2a2e3b"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+					transform="translate(2 2)"
+					class="Dismiss cursor-pointer hover:fill-current text-red-300"
+				>
+					<circle cx="8.5" cy="8.5" r="8"></circle>
+					<g transform="matrix(0 1 -1 0 17 0)">
+						<path d="m5.5 11.5 6-6"></path>
+						<path d="m5.5 5.5 6 6"></path>
+					</g>
+				</g>
+			</svg>
+		</div>
+		<p id="pop-title" class="mt-2 font-bold w-11/12 text-left border-b">
+			REPLACE_TITLE
+		</p>
+		<div id="loading" class="REPLACE_LOADING animated py-4">
+			<svg class="animate-spin -ml-1 mr-3 h-24 w-24 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+				<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+				<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+			</svg>
+		</div>
+		<p
+			id="pop-body"
+			class="animated fast loading p-2 w-11/12 text-left text-black text-semi-bold"
+		>
+			REPLACE_BODY
+		</p>
+	</div>
+`;
+
+const minNotificationTemplate: string = `
+	<div class="w-full flex flex-col REPLACE_STYLE">
+		<div class="w-full flex justify-between">
+			<p class="mt-2 font-bold w-11/12 text-left border-b">REPLACE_TITLE</p>
+			<svg
+				id="Dismiss"
+				height="21"
+				viewBox="0 0 21 21"
+				width="21"
+				xmlns="http://www.w3.org/2000/svg"
+			>
+				<g
+					fill="none"
+					fill-rule="evenodd"
+					stroke="#2a2e3b"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+					transform="translate(2 2)"
+					class="Dismiss cursor-pointer hover:fill-current text-red-300"
+				>
+					<circle cx="8.5" cy="8.5" r="8"></circle>
+					<g transform="matrix(0 1 -1 0 17 0)">
+						<path d="m5.5 11.5 6-6"></path>
+						<path d="m5.5 5.5 6 6"></path>
+					</g>
+				</g>
+			</svg>
+		</div>
+		<p class="py-2 w-11/12 text-left text-black text-semi-bold">REPLACE_BODY</p>
+	</div>
+`;
+
+const defaultConfig: NotificationConfig = {
 	actions: {
 		Dismiss: {
 			options: ['Dismiss', 'No', 'Cancel'],
 			close: true,
-			resolve: true,
-			reload: false,
-			returnComment: {
+			promise: {
 				ACTION: 'Dismissed',
 			},
 			colour: 'red',
 		},
 		Accept: {
-			options: ['Accept', 'Yes'],
+			options: ['Accept', 'Yes', 'Authorize'],
 			close: true,
-			resolve: true,
-			reload: false,
-			returnComment: {
+			promise: {
 				ACTION: 'Accepted',
 			},
+			reload: false,
 			colour: 'green',
 		},
 		Retry: {
 			options: ['Retry', 'Exit'],
 			close: false,
-			resolve: false,
-			reload: true,
-			returnComment: {
+			promise: {
 				ACTION: 'Reloading',
 			},
+			reload: true,
 			colour: 'red',
 		},
 	},
@@ -84,15 +175,16 @@ const getNotificationStyle = (
 };
 
 const getNotificationPosition = (
-	data: NotifyConfig
+	data: NotifyBody
 ): [string, NotificationSlideDirection] => {
 	const selected_positions = data.position ? data.position : [];
 	let position: string = '';
 	let slideDirection: NotificationSlideDirection;
 
 	if (selected_positions.includes('BOTTOM')) {
-		position += ' bottom-0 mb-5';
+		position += ' bottom-0 mb-10';
 	}
+
 	if (selected_positions.includes('TOP')) {
 		position += ' top-0 mt-5';
 	}
@@ -126,12 +218,12 @@ const getNotificationPosition = (
 };
 
 export const Notify = (
-	data: NotifyConfig,
+	data: NotifyBody,
 	notificationSize: NotificationSize,
-	customConfig?: any
+	customConfig?: NotificationConfig
 ) =>
 	new Promise((resolve, reject) => {
-		let noteTimer: number = 3000;
+		const noteTimer: number = data.time ?? 3000;
 		const configuration = customConfig || defaultConfig;
 		const [position, slideDirection] = getNotificationPosition(data);
 		const [notificationStyle, notificationContainerStyle] = getNotificationStyle(
@@ -141,17 +233,14 @@ export const Notify = (
 			slideDirection
 		);
 
-		if (notificationSize === 'MIN') {
-			if (data.time) {
-				noteTimer = data.time;
-			}
-		}
+		const loading: boolean = !!data.body;
 
 		const notificationBody = notificationTemplate(
 			data,
 			notificationStyle,
 			data.colour,
-			notificationSize
+			notificationSize,
+			loading
 		);
 
 		const notification = document.createElement('div');
@@ -170,14 +259,7 @@ export const Notify = (
 				btn.innerHTML = option;
 				buttonContainer.append(btn);
 
-				setPopFunction(
-					notificationSize,
-					configuration,
-					btn,
-					option,
-					resolve,
-					reject
-				);
+				setPopFunction(configuration, btn, option, resolve, reject);
 			}
 
 			if (notificationSize === 'MIN') {
@@ -208,8 +290,9 @@ export const Notify = (
 		drag(notification.firstElementChild as HTMLElement);
 
 		if ($('#Dismiss')) {
-			$('#Dismiss').addEventListener('click', () => {
-				$$('.popup-cont-x').fadeOut();
+			$('#Dismiss').addEventListener('click', (e) => {
+				const parent = getElementParent(e.target as HTMLElement);
+				$$(parent).fadeOut();
 			});
 		}
 
@@ -220,106 +303,90 @@ export const Notify = (
 		) {
 			notification.querySelectorAll('input')[0].focus();
 		}
-	}).catch((reject) => {
-		console.log(reject);
 	});
 
 const notificationTemplate = (
-	data: NotifyConfig,
+	data: NotifyBody,
 	style: string,
 	colour: NotificationColour,
-	type: NotificationSize
+	type: NotificationSize,
+	loading: boolean
 ) => {
-	let isLoading = 'block';
+	const replacements: { [key: string]: string | undefined } = {
+		STYLE: style,
+		COLOUR: colour,
+		TITLE: data.title,
+		BODY: data.body,
+		LOADING: loading ? 'hidden' : 'block',
+	};
 
-	if (data.body) {
-		isLoading = 'hidden';
+	let notificationTemplate: string =
+		type === 'MAX' ? maxNotificationTemplate : minNotificationTemplate;
+
+	for (const replacement in replacements) {
+		notificationTemplate = notificationTemplate.replaceAll(
+			`REPLACE_${replacement}`,
+			replacements[replacement] ?? ''
+		);
 	}
 
-	if (type === 'MAX') {
-		return `
-			<div class="leading-loose w-1/4 ${style}">
-				<div
-					draggable="true"
-					class="cursor-grab active:cursor-grabbing w-full flex justify-end bg-${colour}-500 p-1 rounded-t"
-				>
-					<svg
-						id="Dismiss"
-						height="21"
-						viewBox="0 0 21 21"
-						width="21"
-						xmlns="http://www.w3.org/2000/svg"
-					>
-						<g
-							fill="none"
-							fill-rule="evenodd"
-							stroke="#2a2e3b"
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							transform="translate(2 2)"
-							class="Dismiss cursor-pointer hover:fill-current text-red-300"
-						>
-							<circle cx="8.5" cy="8.5" r="8"></circle>
-							<g transform="matrix(0 1 -1 0 17 0)">
-								<path d="m5.5 11.5 6-6"></path>
-								<path d="m5.5 5.5 6 6"></path>
-							</g>
-						</g>
-					</svg>
-				</div>
-				<p id="pop-title" class="mt-2 font-bold w-11/12 text-left border-b">
-					${data.title}
-				</p>
-				<div id="loading" class="${isLoading} animated py-4">
-					<div
-						class="loader ease-linear rounded-full border-8 border-t-8 border-gray-200 h-32 w-32"
-					></div>
-				</div>
-				<p
-					id="pop-body"
-					class="animated fast loading p-2 w-11/12 text-left text-black text-semi-bold"
-				>
-					${data.body}
-				</p>
-			</div>
-		`;
-	}
-	return `
-		<div class="w-full ${style}">
-			<p class="mt-2 font-bold w-11/12 text-left border-b">${data.title}</p>
-			<p class="py-2 w-11/12 text-left text-black text-semi-bold">${data.body}</p>
-		</div>
-	`;
+	return notificationTemplate;
 };
 
 const setPopFunction = (
-	notificationSize: NotificationSize,
-	configuration: any,
+	configuration: NotificationConfig,
 	btn: HTMLButtonElement,
 	query: string,
 	resolve: any,
 	reject: any
 ) => {
 	for (const actions in configuration.actions) {
-		const item_conf = configuration.actions[actions];
-		for (const options of item_conf.options) {
-			if (query.toString() === options.toString()) {
+		const { reload, promise, close, callback, colour, options } =
+			configuration.actions[actions];
+
+		for (const option of options) {
+			if (query.toString() === option.toString()) {
 				btn.setAttribute(
 					'class',
-					`${query} w-24 focus:outline-none text-${item_conf.colour}-400 border-${item_conf.colour}-400 rounded-full hover:bg-${item_conf.colour}-400 hover:text-${item_conf.colour}-100 px-2`
+					`${query} w-auto min-w-24 focus:outline-none text-${colour}-400 border-${colour}-400 rounded-full border hover:bg-${colour}-400 hover:text-${colour}-100 px-2`
 				);
 
-				return btn.addEventListener('click', () => {
-					if (notificationSize == 'MAX' && item_conf.close) {
-						$$('.popup-cont-x').fadeOut();
-					} else if (item_conf.close) {
-						$$('.popup-cont').fadeOut();
+				return btn.addEventListener('click', (e) => {
+					const parent = getElementParent(e.target as HTMLElement);
+					switch (true) {
+						case reload:
+							return window.location.reload();
+						case close && !!promise:
+							$$(parent).fadeOut();
+							return resolve(promise);
+						case !!promise:
+							return resolve(promise);
+						case close:
+							return $$(parent).fadeOut();
+						case !!callback:
+							return callback(resolve, reject);
+						default:
+							return reject({ ACTION: 'reject' });
 					}
-					if (item_conf.reload) window.location.reload();
-					if (item_conf.resolve) resolve(item_conf.returnComment);
-					if (!item_conf.resolve) reject(item_conf.returnComment);
 				});
 			}
 		}
 	}
+};
+
+const getElementParent = (element: HTMLElement | null): string => {
+	if (!element) {
+		throw Error('Could not obtain parent element...');
+	}
+
+	if (
+		element.classList.contains('popup-cont-x') ||
+		element.classList.contains('popup-cont')
+	) {
+		return element.classList.contains('popup-cont-x')
+			? '.popup-cont-x'
+			: '.popup-cont';
+	}
+
+	return getElementParent(element.parentElement as HTMLElement);
 };

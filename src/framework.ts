@@ -96,7 +96,6 @@ export const $$ = (query: string) => {
 ///////////////////////////
 
 export const drag = (el: HTMLElement) => {
-	console.log(el);
 	let child: any;
 	let pos1 = 0,
 		pos2 = 0,
