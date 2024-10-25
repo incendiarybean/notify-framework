@@ -1,29 +1,41 @@
 import './min.css';
 
-import { $, $$, drag } from './framework';
+export enum NotificationPosition {
+	LeftTop,
+	LeftBottom,
+	RightTop,
+	RightBottom,
+}
 
-type NotificationPosition = 'LEFT' | 'TOP' | 'BOTTOM' | 'RIGHT';
+enum NotificationSlideDirection {
+	Left = 'Left',
+	Right = 'Right',
+}
 
-type NotificationSize = 'MAX' | 'MIN';
+export enum NotificationSize {
+	TOAST = 'min',
+	CARD = 'max',
+}
 
-type NotificationColour =
-	| 'red'
-	| 'green'
-	| 'blue'
-	| 'yellow'
-	| 'orange'
-	| 'purple'
-	| 'sky'
-	| 'emerald'
-	| 'amber'
-	| 'voilet';
+export enum NotificationColour {
+	RED = 'red',
+	GREEN = 'green',
+	BLUE = 'blue',
+	YELLOW = 'yellow',
+	ORANGE = 'orange',
+	PURPLE = 'purple',
+	SKY = 'sky',
+	EMERALD = 'emerald',
+	AMBER = 'amber',
+	VOILET = 'voilet',
+}
 
 type NotifyBody = {
 	title: string;
 	body?: string;
 	colour: NotificationColour;
 	options?: string[];
-	position?: NotificationPosition[];
+	position?: NotificationPosition;
 	time?: number;
 };
 
@@ -42,8 +54,6 @@ type NotificationConfig = {
 	};
 };
 
-export type NotificationSlideDirection = 'Left' | 'Right' | undefined;
-
 const maxNotificationTemplate: string = `
 	<div class="leading-loose w-1/4 REPLACE_STYLE">
 		<div
@@ -51,7 +61,7 @@ const maxNotificationTemplate: string = `
 			class="cursor-grab active:cursor-grabbing w-full flex justify-end bg-REPLACE_COLOUR-500 p-1 rounded-t"
 		>
 			<svg
-				id="Dismiss"
+				class="close-btn"
 				height="21"
 				viewBox="0 0 21 21"
 				width="21"
@@ -64,7 +74,7 @@ const maxNotificationTemplate: string = `
 					stroke-linecap="round"
 					stroke-linejoin="round"
 					transform="translate(2 2)"
-					class="Dismiss cursor-pointer hover:fill-current text-red-300"
+					class="cursor-pointer fill-current text-red-300 hover:fill-current hover:text-red-400"
 				>
 					<circle cx="8.5" cy="8.5" r="8"></circle>
 					<g transform="matrix(0 1 -1 0 17 0)">
@@ -94,10 +104,10 @@ const maxNotificationTemplate: string = `
 
 const minNotificationTemplate: string = `
 	<div class="w-full flex flex-col REPLACE_STYLE">
-		<div class="w-full flex justify-between">
-			<p class="mt-2 font-bold w-11/12 text-left border-b">REPLACE_TITLE</p>
+		<div class="w-full flex justify-between border-b">
+			<p class="font-bold w-11/12 text-left">REPLACE_TITLE</p>
 			<svg
-				id="Dismiss"
+				class="close-btn"
 				height="21"
 				viewBox="0 0 21 21"
 				width="21"
@@ -110,7 +120,7 @@ const minNotificationTemplate: string = `
 					stroke-linecap="round"
 					stroke-linejoin="round"
 					transform="translate(2 2)"
-					class="Dismiss cursor-pointer hover:fill-current text-red-300"
+					class="cursor-pointer fill-current text-red-300 hover:fill-current hover:text-red-400"
 				>
 					<circle cx="8.5" cy="8.5" r="8"></circle>
 					<g transform="matrix(0 1 -1 0 17 0)">
@@ -155,238 +165,364 @@ const defaultConfig: NotificationConfig = {
 	},
 };
 
-const getNotificationStyle = (
-	size: NotificationSize,
-	position: string,
-	colour: string,
-	slideAnimation: NotificationSlideDirection
-): string[] => {
-	if (size === 'MIN') {
-		return [
-			'pop-min',
-			`popup-cont animated slideIn${slideAnimation} fast shadow-lg flex z-50 flex-col absolute ${position} w-64 mx-auto border-t-4 border-${colour}-500 items-center bg-white rounded-b text-black text-md px-4 py-3`,
-		];
-	}
+export const notifications = new Map<number, Notification>();
 
-	return [
-		`pop-max animated bounceIn items-center flex flex-col max-w-sm mx-auto text-${colour}-500 text-center text-md bg-white rounded shadow`,
-		'popup-cont-x animated faster fixed w-full h-full items-center top-0 z-50 bg-gray-500 bg-opacity-50 flex content-center',
-	];
-};
+export class Notification {
+	// Notification element
+	private readonly id: number;
+	private readonly notification: HTMLElement;
+	private readonly notificationId: string;
 
-const getNotificationPosition = (
-	data: NotifyBody
-): [string, NotificationSlideDirection] => {
-	const selected_positions = data.position ? data.position : [];
-	let position: string = '';
-	let slideDirection: NotificationSlideDirection;
+	// Customisation
+	private readonly notificationConfig: NotificationConfig;
+	private readonly notificationTitle: string;
+	private readonly notificationBody: string | undefined;
+	private readonly notificationColour: NotificationColour;
+	private readonly notificationSize: NotificationSize;
+	private readonly notificationOptions: string[] | undefined;
+	private readonly notificationLoading: boolean;
+	private readonly notificationSlideDirection: NotificationSlideDirection;
+	private readonly notificationPositionClass: string;
+	private readonly cb: (
+		resolve: (value: unknown) => void,
+		reject: (value: unknown) => void
+	) => void | undefined;
 
-	if (selected_positions.includes('BOTTOM')) {
-		position += ' bottom-0 mb-10';
-	}
+	// Notification timeout and removal
+	private readonly timeout: number;
+	private readonly expiration: ReturnType<typeof setTimeout> | undefined;
 
-	if (selected_positions.includes('TOP')) {
-		position += ' top-0 mt-5';
-	}
-
-	if (selected_positions.includes('LEFT')) {
-		position += ' left-0';
-		slideDirection = 'Left';
-	}
-
-	if (selected_positions.includes('RIGHT')) {
-		position += ' right-0';
-		slideDirection = 'Right';
-	}
-
-	if (
-		!selected_positions.includes('TOP') &&
-		!selected_positions.includes('BOTTOM')
+	constructor(
+		id: number,
+		content: NotifyBody,
+		notificationSize: NotificationSize,
+		callback?: any,
+		extendConfig?: NotificationConfig
 	) {
-		position += ' bottom-0 mb-5';
-	}
+		const { title, body, colour, position, options, time } = content;
 
-	if (
-		!selected_positions.includes('LEFT') &&
-		!selected_positions.includes('RIGHT')
-	) {
-		position += ' left-0';
-		slideDirection = 'Left';
-	}
+		this.id = id;
+		this.notificationId = `popup-${id}-${notificationSize}`;
+		this.notificationTitle = title;
+		this.notificationBody = body;
+		this.notificationColour = colour;
+		this.notificationSize = notificationSize;
+		this.notificationOptions = options;
+		this.notificationLoading = !!body;
+		this.notificationConfig = { ...defaultConfig, ...extendConfig };
+		this.cb = callback;
+		this.timeout = time ?? 3000;
 
-	return [position, slideDirection];
-};
+		const [positionClass, slideDirection] =
+			this.getNotificationPosition(position);
+		this.notificationSlideDirection = slideDirection;
+		this.notificationPositionClass = positionClass;
 
-export const Notify = (
-	data: NotifyBody,
-	notificationSize: NotificationSize,
-	customConfig?: NotificationConfig
-) =>
-	new Promise((resolve, reject) => {
-		const noteTimer: number = data.time ?? 3000;
-		const configuration = customConfig || defaultConfig;
-		const [position, slideDirection] = getNotificationPosition(data);
-		const [notificationStyle, notificationContainerStyle] = getNotificationStyle(
-			notificationSize,
-			position,
-			data.colour,
-			slideDirection
-		);
-
-		const loading: boolean = !!data.body;
-
-		const notificationBody = notificationTemplate(
-			data,
-			notificationStyle,
-			data.colour,
-			notificationSize,
-			loading
-		);
+		const [notificationStyle, notificationContainerStyle] =
+			this.getNotificationStyle();
 
 		const notification = document.createElement('div');
+		notification.id = this.notificationId;
 		notification.setAttribute('class', notificationContainerStyle);
 		notification.setAttribute('role', 'alert');
-		notification.id = 'popup';
-		notification.innerHTML = notificationBody;
+		notification.innerHTML = this.notificationTemplate(notificationStyle);
+		this.notification = notification;
 
-		if (data.options && data.options.length > 0) {
-			const options = data.options;
-			const buttonContainer = document.createElement('div');
+		this.enableDragging();
 
-			for (const option of options) {
-				const btn = document.createElement('button');
+		notification
+			.getElementsByClassName('close-btn')[0]
+			.addEventListener('click', () => this.hide());
 
-				btn.innerHTML = option;
-				buttonContainer.append(btn);
-
-				setPopFunction(configuration, btn, option, resolve, reject);
-			}
-
-			if (notificationSize === 'MIN') {
-				buttonContainer.setAttribute(
-					'class',
-					'btn-cont animated p-2 w-full flex justify-around'
-				);
-			}
-
-			if (notificationSize === 'MAX') {
-				buttonContainer.setAttribute(
-					'class',
-					'btn-cont animated p-4 w-full flex justify-around'
-				);
-			}
-
-			notification.children[0].append(buttonContainer);
-		} else if (notificationSize !== 'MAX') {
-			setTimeout(() => {
-				if ($('.popup-cont')) {
-					$$('.popup-cont').slideOut(slideDirection);
-				}
-			}, noteTimer);
+		if (this.notificationSize === NotificationSize.TOAST) {
+			this.expiration = setTimeout(() => this.hide(), this.timeout);
 		}
+	}
 
-		document.body.append(notification);
+	create = async () => {
+		this.show();
 
-		drag(notification.firstElementChild as HTMLElement);
-
-		if ($('#Dismiss')) {
-			$('#Dismiss').addEventListener('click', (e) => {
-				const parent = getElementParent(e.target as HTMLElement);
-				$$(parent).fadeOut();
-			});
-		}
-
-		if (
-			data.options &&
-			data.options.length > 0 &&
-			notification.querySelectorAll('input')[0]
-		) {
-			notification.querySelectorAll('input')[0].focus();
-		}
-	});
-
-const notificationTemplate = (
-	data: NotifyBody,
-	style: string,
-	colour: NotificationColour,
-	type: NotificationSize,
-	loading: boolean
-) => {
-	const replacements: { [key: string]: string | undefined } = {
-		STYLE: style,
-		COLOUR: colour,
-		TITLE: data.title,
-		BODY: data.body,
-		LOADING: loading ? 'hidden' : 'block',
+		return await this.setOptions();
 	};
 
-	let notificationTemplate: string =
-		type === 'MAX' ? maxNotificationTemplate : minNotificationTemplate;
+	setOptions = async (): Promise<any> =>
+		new Promise((resolve, reject) => {
+			const buttonContainer = document.createElement('div');
 
-	for (const replacement in replacements) {
-		notificationTemplate = notificationTemplate.replaceAll(
-			`REPLACE_${replacement}`,
-			replacements[replacement] ?? ''
-		);
-	}
+			if (this.notificationOptions) {
+				for (const option of this.notificationOptions) {
+					const btn = document.createElement('button');
 
-	return notificationTemplate;
-};
+					btn.innerHTML = option;
+					buttonContainer.append(btn);
 
-const setPopFunction = (
-	configuration: NotificationConfig,
-	btn: HTMLButtonElement,
-	query: string,
-	resolve: any,
-	reject: any
-) => {
-	for (const actions in configuration.actions) {
-		const { reload, promise, close, callback, colour, options } =
-			configuration.actions[actions];
+					this.setPopFunction(btn, option, resolve, reject);
+				}
 
-		for (const option of options) {
-			if (query.toString() === option.toString()) {
-				btn.setAttribute(
+				buttonContainer.setAttribute(
 					'class',
-					`${query} w-auto min-w-24 focus:outline-none text-${colour}-400 border-${colour}-400 rounded-full border hover:bg-${colour}-400 hover:text-${colour}-100 px-2`
+					`btn-cont animated w-full flex justify-around ${
+						this.notificationSize === NotificationSize.CARD ? 'p-4' : 'p-2'
+					}`
 				);
 
-				return btn.addEventListener('click', (e) => {
-					const parent = getElementParent(e.target as HTMLElement);
-					switch (true) {
-						case reload:
-							return window.location.reload();
-						case close && !!promise:
-							$$(parent).fadeOut();
-							return resolve(promise);
-						case !!promise:
-							return resolve(promise);
-						case close:
-							return $$(parent).fadeOut();
-						case !!callback:
-							return callback(resolve, reject);
-						default:
-							return reject({ ACTION: 'reject' });
+				this.notification.children[0].append(buttonContainer);
+			}
+		});
+
+	show = () => {
+		document.body.append(this.notification);
+
+		if (this.notificationSize === NotificationSize.TOAST) {
+			this.slideIn();
+		} else {
+			this.fadeIn();
+		}
+
+		return this;
+	};
+
+	hide = () => {
+		if (this.notificationSize === NotificationSize.TOAST) {
+			clearTimeout(this.expiration);
+			this.slideOut();
+		} else {
+			this.fadeOut();
+		}
+
+		return this;
+	};
+
+	delete = () => {
+		this.notification.parentNode?.removeChild(this.notification);
+
+		notifications.delete(this.id);
+	};
+
+	fadeIn = () => {
+		this.notification.classList.toggle('hidden', false);
+		this.notification.classList.add('fadeIn');
+
+		this.notification.addEventListener('animationend', () => {
+			this.notification.classList.remove('fadeIn');
+		});
+
+		return this;
+	};
+
+	fadeOut = () => {
+		this.notification.classList.add('fadeOut');
+
+		this.notification.addEventListener('animationend', () => {
+			this.notification.classList.remove('fadeOut');
+			this.notification.classList.toggle('hidden', true);
+
+			this.delete();
+		});
+
+		return this;
+	};
+
+	slideIn = () => {
+		this.notification.classList.toggle('hidden', false);
+		this.notification.classList.add(`slideIn${this.notificationSlideDirection}`);
+
+		this.notification.addEventListener('animationend', () => {
+			this.notification.classList.remove(
+				`slideIn${this.notificationSlideDirection}`
+			);
+		});
+
+		return this;
+	};
+
+	slideOut = () => {
+		this.notification.classList.add(`slideOut${this.notificationSlideDirection}`);
+		this.notification.addEventListener('animationend', () => {
+			this.notification.classList.remove('fadeOut');
+			this.notification.classList.toggle('hidden', true);
+
+			this.delete();
+		});
+
+		return this;
+	};
+
+	getNotificationStyle = (): string[] => {
+		if (this.notificationSize === NotificationSize.TOAST) {
+			return [
+				`pop-min flex flex-col border-t-4 border-${this.notificationColour}-500 items-center bg-white rounded text-black text-md px-4 py-2 shadow-xl`,
+				`popup-cont animated z-50 absolute ${this.notificationPositionClass} min-w-[24rem] min-h-[6rem] mx-auto px-4`,
+			];
+		}
+
+		return [
+			`pop-max animated bounceIn items-center flex flex-col max-w-sm mx-auto text-${this.notificationColour}-500 text-center text-md bg-white rounded shadow`,
+			'popup-cont-x animated faster fixed w-full h-full items-center top-0 z-50 bg-gray-500 bg-opacity-50 flex content-center',
+		];
+	};
+
+	getNotificationPosition = (
+		position: NotificationPosition | undefined
+	): [string, NotificationSlideDirection] => {
+		switch (position) {
+			case NotificationPosition.LeftBottom:
+				return ['left-0 bottom-0 mb-10', NotificationSlideDirection.Left];
+			case NotificationPosition.LeftTop:
+				return ['left-0 top-0 mt-5', NotificationSlideDirection.Left];
+			case NotificationPosition.RightBottom:
+				return ['right-0 bottom-0 mb-10', NotificationSlideDirection.Right];
+			case NotificationPosition.RightTop:
+				return ['right-0 top-0 mt-5', NotificationSlideDirection.Right];
+			default:
+				return ['left-0 bottom-0 mb-10', NotificationSlideDirection.Left];
+		}
+	};
+
+	notificationTemplate = (style: string) => {
+		const replacements: { [key: string]: string | undefined } = {
+			STYLE: style,
+			COLOUR: this.notificationColour,
+			TITLE: this.notificationTitle,
+			BODY: this.notificationBody,
+			LOADING: this.notificationLoading ? 'hidden' : 'block',
+		};
+
+		let notificationTemplate: string =
+			this.notificationSize === NotificationSize.CARD
+				? maxNotificationTemplate
+				: minNotificationTemplate;
+
+		for (const replacement in replacements) {
+			notificationTemplate = notificationTemplate.replaceAll(
+				`REPLACE_${replacement}`,
+				replacements[replacement] ?? ''
+			);
+		}
+
+		return notificationTemplate;
+	};
+
+	enableDragging = () => {
+		const draggableElement = this.notification.firstElementChild as HTMLElement;
+		let child: HTMLElement;
+		let pos1 = 0,
+			pos2 = 0,
+			pos3 = 0,
+			pos4 = 0;
+
+		const startDrag = (e: MouseEvent) => {
+			e.preventDefault();
+
+			draggableElement.dispatchEvent(new Event('dragstart'));
+
+			pos1 = e.clientX;
+			pos2 = e.clientY;
+			pos3 = pos1 - e.clientX;
+			pos4 = pos2 - e.clientY;
+
+			draggableElement.style.left = draggableElement.offsetLeft - pos3 + 'px';
+			draggableElement.style.top = draggableElement.offsetTop - pos4 + 'px';
+
+			if (!draggableElement.classList.contains('absolute')) {
+				draggableElement.classList.add('absolute');
+			}
+
+			document.onmouseup = endDrag;
+			document.onmousemove = dragging;
+		};
+
+		const dragging = (e: MouseEvent): any => {
+			e.preventDefault();
+
+			pos3 = pos1 - e.clientX;
+			pos4 = pos2 - e.clientY;
+			pos1 = e.clientX;
+			pos2 = e.clientY;
+
+			draggableElement.style.left = draggableElement.offsetLeft - pos3 + 'px';
+			draggableElement.style.top = draggableElement.offsetTop - pos4 + 'px';
+		};
+
+		const endDrag = () => {
+			draggableElement.dispatchEvent(new Event('dragend'));
+
+			document.onmouseup = null;
+			document.onmousemove = null;
+		};
+
+		for (const elementChild of draggableElement.children) {
+			draggableElement.getBoundingClientRect();
+
+			child = elementChild as HTMLElement;
+
+			if (child.draggable) {
+				child.onmousedown = startDrag;
+			} else {
+				return;
+			}
+
+			return child;
+		}
+	};
+
+	setPopFunction = async (
+		btn: HTMLButtonElement,
+		query: string,
+		resolve: any,
+		reject: any
+	) => {
+		for (const actions in this.notificationConfig.actions) {
+			const { reload, promise, close, colour, options } =
+				this.notificationConfig.actions[actions];
+
+			for (const option of options) {
+				if (query.toString() === option.toString()) {
+					btn.setAttribute(
+						'class',
+						`${query} w-auto min-w-24 focus:outline-none text-${colour}-400 border-${colour}-400 rounded-full border hover:bg-${colour}-400 hover:text-${colour}-100 px-2`
+					);
+
+					if (this.cb) {
+						return this.cb(resolve, reject);
 					}
-				});
+
+					return btn.addEventListener('click', () => {
+						switch (true) {
+							case reload:
+								return window.location.reload();
+							case close && !!promise:
+								this.fadeOut();
+								return resolve(promise);
+							case !!promise:
+								return resolve(promise);
+							case close:
+								return this.fadeOut();
+							default:
+								return reject({ ACTION: 'reject' });
+						}
+					});
+				}
 			}
 		}
-	}
-};
+	};
+}
 
-const getElementParent = (element: HTMLElement | null): string => {
-	if (!element) {
-		throw Error('Could not obtain parent element...');
-	}
+export const createNotification = async (
+	data: NotifyBody,
+	notificationSize: NotificationSize,
+	callback?: (args: any) => any,
+	extendConfig?: NotificationConfig
+) => {
+	const notification = new Notification(
+		notifications.values.length + 1,
+		data,
+		notificationSize,
+		callback,
+		extendConfig
+	);
 
-	if (
-		element.classList.contains('popup-cont-x') ||
-		element.classList.contains('popup-cont')
-	) {
-		return element.classList.contains('popup-cont-x')
-			? '.popup-cont-x'
-			: '.popup-cont';
-	}
+	notifications.set(notifications.values.length, notification);
 
-	return getElementParent(element.parentElement as HTMLElement);
+	return notification.create();
 };
