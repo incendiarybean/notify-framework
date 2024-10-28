@@ -67,14 +67,14 @@ export enum NotificationColour {
 	SKY = 'sky',
 	EMERALD = 'emerald',
 	AMBER = 'amber',
-	VOILET = 'voilet',
+	VIOLET = 'violet',
 }
 
 const maxNotificationTemplate: string = `
-	<div class="leading-loose w-1/4 REPLACE_STYLE">
+	<div class="leading-loose w-1/4 REPLACE_STYLE dark:bg-slate-500">
 		<div
 			draggable="true"
-			class="cursor-grab active:cursor-grabbing w-full flex justify-end bg-REPLACE_COLOUR-500 p-1 rounded-t"
+			class="cursor-grab active:cursor-grabbing w-full flex justify-end bg-REPLACE_COLOUR-500 dark:bg-REPLACE_COLOUR-600 p-1 rounded-t"
 		>			
 			<svg
 				class="close-btn cursor-pointer"
@@ -84,7 +84,7 @@ const maxNotificationTemplate: string = `
 				xmlns="http://www.w3.org/2000/svg"
 			>
 				<g
-					class="fill-current text-red-300 hover:fill-current hover:text-red-400"
+					class="fill-current text-red-300 dark:text-red-400 hover:fill-current hover:text-red-400 hover:dark:text-red-600"
 					fill-rule="evenodd"
 					stroke="#2a2e3b"
 					stroke-linecap="round"
@@ -99,9 +99,9 @@ const maxNotificationTemplate: string = `
 				</g>
 			</svg>
 		</div>
-		<p id="pop-title" class="mt-2 font-bold w-11/12 text-left border-b">
+		<h1 id="pop-title" class="p-1 mt-2 font-bold w-11/12 text-left border-b">
 			REPLACE_TITLE
-		</p>
+		</h1>
 		<div hidden="true" id="loading" class="loading-spinner animated py-4">
 			<svg class="animate-spin -ml-1 mr-3 h-24 w-24 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
 				<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -109,7 +109,7 @@ const maxNotificationTemplate: string = `
 			</svg>
 		</div>
 		<p
-			class="pop-body-content animated fast p-2 w-11/12 text-left text-black text-semi-bold"
+			class="pop-body-content animated fast p-2 w-11/12 text-left text-black dark:text-white text-semi-bold"
 		>
 			REPLACE_MESSAGE
 		</p>
@@ -119,8 +119,8 @@ const maxNotificationTemplate: string = `
 const minNotificationTemplate: string = `
 	<div class="w-full REPLACE_STYLE">
 		<div class="w-full flex justify-between items-center select-none">
-			<p class="py-2 w-11/12 text-left text-black text-semi-bold text-ellipsis">REPLACE_MESSAGE</p>
-			<svg class="close-btn cursor-pointer fill-current text-red-300 hover:fill-current hover:text-red-400 active:text-red-500 w-1/12" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e8eaed"><path d="M480-416.35 287.83-224.17Q275.15-211.5 256-211.5t-31.83-12.67Q211.5-236.85 211.5-256t12.67-31.83L416.35-480 224.17-672.17Q211.5-684.85 211.5-704t12.67-31.83Q236.85-748.5 256-748.5t31.83 12.67L480-543.65l192.17-192.18Q684.85-748.5 704-748.5t31.83 12.67Q748.5-723.15 748.5-704t-12.67 31.83L543.65-480l192.18 192.17Q748.5-275.15 748.5-256t-12.67 31.83Q723.15-211.5 704-211.5t-31.83-12.67L480-416.35Z"/></svg>
+			<p class="py-2 w-11/12 text-left text-semi-bold text-ellipsis">REPLACE_MESSAGE</p>
+			<svg class="close-btn cursor-pointer fill-current text-red-300 dark:text-red-400 hover:fill-current hover:text-red-400 hover:dark:text-red-600 w-1/12" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e8eaed"><path d="M480-416.35 287.83-224.17Q275.15-211.5 256-211.5t-31.83-12.67Q211.5-236.85 211.5-256t12.67-31.83L416.35-480 224.17-672.17Q211.5-684.85 211.5-704t12.67-31.83Q236.85-748.5 256-748.5t31.83 12.67L480-543.65l192.17-192.18Q684.85-748.5 704-748.5t31.83 12.67Q748.5-723.15 748.5-704t-12.67 31.83L543.65-480l192.18 192.17Q748.5-275.15 748.5-256t-12.67 31.83Q723.15-211.5 704-211.5t-31.83-12.67L480-416.35Z"/></svg>
 		</div>
 	</div>
 `;
@@ -205,13 +205,13 @@ class Notification {
 	getNotificationStyle = (): string[] => {
 		if (this.notificationSize === NotificationSize.TOAST) {
 			return [
-				`pop-min flex flex-col items-center justify-center bg-white rounded text-black text-md px-4 py-2 shadow-xl min-h-[5rem] border-t-4 border-${this.notificationColour}-500`,
+				`pop-min flex flex-col items-center justify-center bg-white dark:bg-slate-700 rounded text-black dark:text-white text-md px-4 py-2 shadow-xl min-h-[5rem] border-t-4 border-${this.notificationColour}-500 dark:border-${this.notificationColour}-700`,
 				'popup-cont absolute z-50 animated min-w-[24rem] mx-auto px-4 ',
 			];
 		}
 
 		return [
-			`pop-max animated bounceIn items-center flex flex-col max-w-sm mx-auto text-center text-md bg-white rounded shadow text-${this.notificationColour}-500`,
+			`pop-max animated bounceIn items-center flex flex-col max-w-sm mx-auto text-center text-md bg-white dark:bg-slate-700 rounded shadow text-${this.notificationColour}-500 dark:text-${this.notificationColour}-100`,
 			'popup-cont-x animated faster fixed w-full h-full items-center top-0 z-50 bg-gray-500 bg-opacity-50 flex content-center',
 		];
 	};
@@ -490,7 +490,7 @@ class NotificationCard extends Notification {
 	 *
 	 * @returns Returns the resolution of either the callback function or the response of a button handler.
 	 */
-	public readonly eventHandler = async () => {
+	public readonly eventHandler = async (): Promise<any> => {
 		const promises: Promise<any>[] = [];
 
 		if (this.notificationButtons) {
@@ -501,7 +501,11 @@ class NotificationCard extends Notification {
 			promises.push(this.callbackHandler());
 		}
 
-		return await Promise.any(promises);
+		if (promises.length > 0) {
+			return await Promise.any(promises);
+		}
+
+		return Promise.resolve();
 	};
 
 	/**
@@ -661,7 +665,7 @@ class NotificationToast extends Notification {
 		message: string,
 		colour: NotificationColour = NotificationColour.BLUE,
 		position: NotificationPosition = NotificationPosition.LeftBottom,
-		timeout: number = 3000
+		timeout: number = 5000
 	) {
 		super(id, { message, colour }, NotificationSize.TOAST);
 
