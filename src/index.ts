@@ -550,7 +550,7 @@ class NotificationCard extends Notification {
 					return resolve({ ACTION: 'Dismissed' });
 				});
 
-			for (const buttonConfiguration of buttonConfigurations) {
+			for (const [index, buttonConfiguration] of buttonConfigurations.entries()) {
 				const button = document.createElement('button');
 				const buttonColour = buttonConfiguration?.colour;
 				const buttonValue = buttonConfiguration?.value;
@@ -559,9 +559,11 @@ class NotificationCard extends Notification {
 				const buttonClose = buttonConfiguration?.close;
 
 				button.innerHTML = buttonValue ?? '';
+				button.type = 'button';
+				button.tabIndex = index + 1;
 				button.setAttribute(
 					'class',
-					`${buttonValue} w-auto min-w-24 focus:outline-none text-${buttonColour}-400 border-${buttonColour}-400 rounded-full border hover:bg-${buttonColour}-400 hover:text-${buttonColour}-100 px-2`
+					`${buttonValue} w-auto min-w-24 focus:outline-none text-${buttonColour}-400 border-${buttonColour}-400 rounded-full border hover:bg-${buttonColour}-400 focus:bg-${buttonColour}-400 hover:text-${buttonColour}-100 focus:text-${buttonColour}-100 px-2`
 				);
 
 				button.addEventListener('click', () => {
