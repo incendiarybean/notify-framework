@@ -9,6 +9,7 @@ type NotificationConfig = {
 			ACTION: string;
 		};
 		reload?: boolean;
+		callback?: NotificationCallback;
 	};
 };
 
@@ -99,17 +100,19 @@ const maxNotificationTemplate: string = `
 				</g>
 			</svg>
 		</div>
-		<h1 id="pop-title" class="p-1 mt-2 font-bold w-11/12 text-left border-b">
+		<h1 id="pop-title" class="p-1 mt-2 font-bold w-11/12 text-left border-b tracking-wide font-sans">
 			REPLACE_TITLE
 		</h1>
-		<div hidden="true" id="loading" class="loading-spinner animated py-4">
-			<svg class="animate-spin -ml-1 mr-3 h-24 w-24 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-				<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-				<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-			</svg>
+		<div hidden="true" class="loading-spinner animated py-4" role="status">
+			<div class="my-8 flex flex-row gap-2">
+				<span class="w-4 h-4 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 shadow animate-bounce"></span>
+				<span class="w-4 h-4 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 shadow animate-bounce [animation-delay:-.3s]"></span>
+				<span class="w-4 h-4 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 shadow animate-bounce [animation-delay:-.5s]"></span>
+				<span class="sr-only">Loading...</span>
+			</div>
 		</div>
 		<p
-			class="pop-body-content animated fast p-2 w-11/12 text-left text-black dark:text-white text-semi-bold"
+			class="pop-body-content font-sans animated fast p-2 w-11/12 text-left text-black dark:text-white text-semi-bold"
 		>
 			REPLACE_MESSAGE
 		</p>
@@ -388,7 +391,8 @@ class NotificationCard extends Notification {
 			'pop-body-content'
 		)[0] as HTMLElement;
 
-		if (this.loading) {
+		const elementsExist = spinner && buttonContainer && body;
+		if (this.loading && elementsExist) {
 			// Hide buttons
 			buttonContainer.hidden = this.loading;
 			buttonContainer.classList.remove('flex');
@@ -402,7 +406,7 @@ class NotificationCard extends Notification {
 			spinner.addEventListener('animationend', () => {
 				spinner.classList.remove('fadeIn');
 			});
-		} else {
+		} else if (elementsExist) {
 			// Hide loader
 			spinner.classList.add('fadeOut');
 			spinner.addEventListener('animationend', () => {
@@ -557,6 +561,7 @@ class NotificationCard extends Notification {
 				const buttonPromise = buttonConfiguration?.promise;
 				const buttonReload = buttonConfiguration?.reload;
 				const buttonClose = buttonConfiguration?.close;
+				const buttonCallback = buttonConfiguration?.callback;
 
 				button.innerHTML = buttonValue ?? '';
 				button.type = 'button';
@@ -568,6 +573,8 @@ class NotificationCard extends Notification {
 
 				button.addEventListener('click', () => {
 					switch (true) {
+						case !!buttonCallback:
+							return buttonCallback(resolve, reject, this);
 						case buttonReload:
 							return window.location.reload();
 						case !!buttonPromise:
