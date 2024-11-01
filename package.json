@@ -1,6 +1,6 @@
 {
 	"name": "@incendiarybean/notify-framework",
-	"version": "1.0.1",
+	"version": "1.1.0",
 	"description": "This is a lightweight framework for creating notifications.",
 	"source": "src/index.ts",
 	"module": "dist/index.js",
