@@ -1,6 +1,6 @@
 {
 	"name": "@incendiarybean/notify-framework",
-	"version": "1.1.4",
+	"version": "1.1.5",
 	"description": "This is a lightweight framework for creating notifications.",
 	"source": "src/index.ts",
 	"module": "dist/index.js",
@@ -16,7 +16,7 @@
 	},
 	"scripts": {
 		"start": "nodemon --watch src -e ts --exec 'npm run build:dev'",
-		"build": "npm run build:css && parcel build --no-source-maps && rm ./src/min.css",
+		"build": "rm -rf ./dist && npm run build:css && parcel build --no-source-maps && rm ./src/min.css",
 		"build:dev": "npm run build:css && parcel build && rm ./src/min.css",
 		"build:css": "npx tailwindcss -i ./src/base.css -o ./src/min.css --minify"
 	},

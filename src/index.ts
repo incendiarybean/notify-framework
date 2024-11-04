@@ -115,7 +115,7 @@ const cardNotificationTemplate: string = `
 			</button>
 		</div>
 		<div class="notify-card-body w-full h-auto flex flex-col gap-2 min-h-8 p-2">
-			<div hidden="true" class="loading-spinner animated py-4 w-full" role="status">
+			<div hidden="true" class="notify-loader animated py-4 w-full" role="status">
 				<div class="flex items-center justify-around"> 
 					<div class="my-8 flex flex-row gap-2">
 						<span class="w-4 h-4 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 shadow animate-bounce"></span>
@@ -241,15 +241,15 @@ class NotificationCard extends Notification {
 		configExtends?: NotificationConfig
 	) {
 		super(id, { title, message, colour }, NotificationStyle.CARD);
-
+		const configCopy = { ...defaultConfig };
 		for (const extension in configExtends) {
-			defaultConfig[extension] = {
-				...defaultConfig[extension],
+			configCopy[extension] = {
+				...configCopy[extension],
 				...configExtends[extension],
 			};
 		}
 
-		this.notificationConfig = defaultConfig;
+		this.notificationConfig = configCopy;
 
 		this.notificationButtons = buttons;
 
@@ -316,7 +316,7 @@ class NotificationCard extends Notification {
 		this.loading = value;
 
 		const spinner = this.notification.getElementsByClassName(
-			'loading-spinner'
+			'notify-loader'
 		)[0] as HTMLElement;
 
 		const buttonContainer = this.notification.getElementsByClassName(
@@ -327,11 +327,13 @@ class NotificationCard extends Notification {
 			'notify-card-body-content'
 		)[0] as HTMLElement;
 
-		const elementsExist = spinner && buttonContainer && body;
+		const elementsExist = spinner && body;
 		if (this.loading && elementsExist) {
-			// Hide buttons
-			buttonContainer.hidden = this.loading;
-			buttonContainer.classList.remove('flex');
+			if (buttonContainer) {
+				// Hide buttons
+				buttonContainer.hidden = this.loading;
+				buttonContainer.classList.remove('flex');
+			}
 
 			// Hide body content
 			body.hidden = this.loading;
@@ -457,6 +459,7 @@ class NotificationCard extends Notification {
 		}
 
 		if (typeof this.callback !== 'undefined') {
+			console.log('CALLING BACK');
 			promises.push(this.callbackHandler());
 		}
 
@@ -474,6 +477,7 @@ class NotificationCard extends Notification {
 	private readonly callbackHandler = () =>
 		new Promise<any>((resolve, reject) => {
 			if (typeof this.callback === 'function') {
+				console.log("THIS REALLY DOESN'T MAKE SENSE");
 				this.callback(resolve, reject, this);
 			}
 		});
