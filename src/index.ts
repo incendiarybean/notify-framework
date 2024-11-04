@@ -49,7 +49,7 @@ enum NotificationSlideDirection {
 	Right = 'Right',
 }
 
-export enum NotificationSize {
+export enum NotificationStyle {
 	TOAST,
 	CARD,
 }
@@ -73,50 +73,6 @@ export enum NotificationColour {
 	VIOLET = 'violet',
 	YELLOW = 'yellow',
 }
-
-const maxNotificationTemplate: string = `
-	<div class="w-1/4 min-w-52 REPLACE_STYLE">
-		<div
-			draggable="true"
-			class="cursor-grab active:cursor-grabbing w-full flex justify-between bg-REPLACE_COLOUR-500 rounded-t items-center p-2"
-		>
-			<h1 id="pop-title" class="ml-1 text-white font-semibold w-full text-left tracking-wide font-sans truncate uppercase antialiased">
-				REPLACE_TITLE
-			</h1>
-			<button aria-label="Close Popup" type="button" class="close-btn w-5 h-5 rounded bg-red-400 hover:bg-red-500 flex items-center justify-around">
-				<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e8eaed"><path d="m291-240-51-51 189-189-189-189 51-51 189 189 189-189 51 51-189 189 189 189-51 51-189-189-189 189Z"/></svg>
-			</button>
-		</div>
-		<div class="pop-body w-full h-auto flex flex-col gap-2 min-h-8 p-2">
-			<div hidden="true" class="loading-spinner animated py-4 w-full" role="status">
-				<div class="flex items-center justify-around"> 
-					<div class="my-8 flex flex-row gap-2">
-						<span class="w-4 h-4 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 shadow animate-bounce"></span>
-						<span class="w-4 h-4 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 shadow animate-bounce [animation-delay:-.3s]"></span>
-						<span class="w-4 h-4 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 shadow animate-bounce [animation-delay:-.5s]"></span>
-						<span class="sr-only">Loading...</span>
-					</div>
-				</div>
-			</div>
-			<div class="pop-body-content w-full h-auto px-2 animated fast text-black dark:text-white">
-				<p
-					class="leading-snug font-sansmt-1 text-left"
-				>
-					REPLACE_MESSAGE
-				</p>
-			<div>
-		</div>
-	</div>
-`;
-
-const minNotificationTemplate: string = `
-	<div class="w-full REPLACE_STYLE">
-		<div class="w-full flex justify-between items-center select-none">
-			<p class="py-2 w-11/12 text-left text-semi-bold text-ellipsis">REPLACE_MESSAGE</p>
-			<svg class="close-btn cursor-pointer fill-current text-red-300 dark:text-red-400 hover:fill-current hover:text-red-400 hover:dark:text-red-600 w-1/12" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e8eaed"><path d="M480-416.35 287.83-224.17Q275.15-211.5 256-211.5t-31.83-12.67Q211.5-236.85 211.5-256t12.67-31.83L416.35-480 224.17-672.17Q211.5-684.85 211.5-704t12.67-31.83Q236.85-748.5 256-748.5t31.83 12.67L480-543.65l192.17-192.18Q684.85-748.5 704-748.5t31.83 12.67Q748.5-723.15 748.5-704t-12.67 31.83L543.65-480l192.18 192.17Q748.5-275.15 748.5-256t-12.67 31.83Q723.15-211.5 704-211.5t-31.83-12.67L480-416.35Z"/></svg>
-		</div>
-	</div>
-`;
 
 const defaultConfig: NotificationConfig = {
 	Dismiss: {
@@ -147,6 +103,45 @@ const defaultConfig: NotificationConfig = {
 	},
 };
 
+const cardNotificationTemplate: string = `
+	<div class="notify-card w-1/4 min-w-52 animated bounceIn items-center flex flex-col max-w-md mx-auto text-center text-md bg-white dark:bg-zinc-900 rounded rounded-t-xl shadow-xl">
+		<div
+			draggable="true"
+			class="notify-card-title-bar cursor-grab active:cursor-grabbing w-full flex justify-between rounded-t items-center p-2"
+		>
+			<h1 class="notify-card-title ml-1 text-white font-semibold w-full text-left tracking-wide font-sans truncate uppercase antialiased"></h1>
+			<button aria-label="Close Popup" type="button" class="close-btn w-5 h-5 rounded bg-red-400 hover:bg-red-500 flex items-center justify-around">
+				<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e8eaed"><path d="m291-240-51-51 189-189-189-189 51-51 189 189 189-189 51 51-189 189 189 189-51 51-189-189-189 189Z"/></svg>
+			</button>
+		</div>
+		<div class="notify-card-body w-full h-auto flex flex-col gap-2 min-h-8 p-2">
+			<div hidden="true" class="loading-spinner animated py-4 w-full" role="status">
+				<div class="flex items-center justify-around"> 
+					<div class="my-8 flex flex-row gap-2">
+						<span class="w-4 h-4 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 shadow animate-bounce"></span>
+						<span class="w-4 h-4 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 shadow animate-bounce [animation-delay:-.3s]"></span>
+						<span class="w-4 h-4 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 shadow animate-bounce [animation-delay:-.5s]"></span>
+						<span class="sr-only">Loading...</span>
+					</div>
+				</div>
+			</div>
+			<div class="notify-card-body-content w-full h-auto px-2 animated fast text-black dark:text-white">
+				<p class="notify-card-message leading-snug font-sansmt-1 text-left"></p>
+			<div>
+		</div>
+	</div>
+`;
+
+const toastNotificationTemplate: string = `
+	<div class="notify-toast w-full bg-white dark:bg-zinc-900 border-2 border-b-0 border-zinc-100 dark:border-zinc-800 rounded text-black dark:text-white text-md shadow-xl min-h-[4rem] flex flex-col justify-between">
+		<div class="w-full flex justify-between items-center select-none px-4 py-2">
+			<p class="notify-toast-message py-2 w-11/12 text-left text-semi-bold text-ellipsis"></p>
+			<svg class="close-btn cursor-pointer fill-current text-red-300 dark:text-red-400 hover:fill-current hover:text-red-400 hover:dark:text-red-600 w-1/12" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e8eaed"><path d="M480-416.35 287.83-224.17Q275.15-211.5 256-211.5t-31.83-12.67Q211.5-236.85 211.5-256t12.67-31.83L416.35-480 224.17-672.17Q211.5-684.85 211.5-704t12.67-31.83Q236.85-748.5 256-748.5t31.83 12.67L480-543.65l192.17-192.18Q684.85-748.5 704-748.5t31.83 12.67Q748.5-723.15 748.5-704t-12.67 31.83L543.65-480l192.18 192.17Q748.5-275.15 748.5-256t-12.67 31.83Q723.15-211.5 704-211.5t-31.83-12.67L480-416.35Z"/></svg>
+		</div>
+		<div class="notify-toast-timeout z-10 h-1 transition-all rounded-b" style="width: 100%;"></div>
+	</div>
+`;
+
 export const notifications = new Map<number, Notification>();
 
 class Notification {
@@ -159,23 +154,21 @@ class Notification {
 	readonly notificationTitle?: string;
 	public notificationMessage?: string;
 	public readonly notificationColour?: NotificationColour;
-	public readonly notificationSize: NotificationSize;
-	public notificationContainerStyle?: string;
-	public notificationStyle?: string;
+	public readonly notificationStyle: NotificationStyle;
 
 	constructor(
 		id: number,
 		options: NotificationOptions,
-		notificationSize: NotificationSize
+		notificationStyle: NotificationStyle
 	) {
 		const { title, message, colour } = options;
 
 		this.id = id;
-		this.notificationId = `popup-${id}-${notificationSize}`;
+		this.notificationId = `popup-${id}-${notificationStyle}`;
 		this.notificationTitle = title;
 		this.notificationMessage = message;
 		this.notificationColour = colour;
-		this.notificationSize = notificationSize;
+		this.notificationStyle = notificationStyle;
 
 		const notification = document.createElement('div');
 		notification.id = this.notificationId;
@@ -190,49 +183,6 @@ class Notification {
 		this.notification.parentNode?.removeChild(this.notification);
 
 		notifications.delete(this.id);
-	};
-
-	/**
-	 * A function to obtain the default styling of the notification.
-	 */
-	getNotificationStyle = (): string[] => {
-		if (this.notificationSize === NotificationSize.TOAST) {
-			return [
-				`pop-min flex flex-col items-center justify-center bg-white dark:bg-zinc-900 rounded text-black dark:text-white text-md px-4 py-2 shadow-xl min-h-[4rem] border-t-4 border-${this.notificationColour}-500 dark:border-${this.notificationColour}-700`,
-				'popup-cont absolute z-50 animated min-w-[24rem] mx-auto px-4 ',
-			];
-		}
-
-		return [
-			`pop-max animated bounceIn items-center flex flex-col max-w-sm mx-auto text-center text-md bg-white dark:bg-zinc-900 rounded rounded-t-xl shadow-xl text-${this.notificationColour}-500 dark:text-${this.notificationColour}-30`,
-			'popup-cont-x animated faster fixed w-full h-full items-center top-0 z-50 bg-gray-500 bg-opacity-50 flex content-center',
-		];
-	};
-
-	/**
-	 * A function to generate the appropriate element from the HTML template.
-	 */
-	notificationTemplate = (style: string) => {
-		const replacements: { [key: string]: string | undefined } = {
-			STYLE: style,
-			COLOUR: this.notificationColour,
-			TITLE: this.notificationTitle,
-			MESSAGE: this.notificationMessage,
-		};
-
-		let notificationTemplate: string =
-			this.notificationSize === NotificationSize.CARD
-				? maxNotificationTemplate
-				: minNotificationTemplate;
-
-		for (const replacement in replacements) {
-			notificationTemplate = notificationTemplate.replaceAll(
-				`REPLACE_${replacement}`,
-				replacements[replacement] ?? ''
-			);
-		}
-
-		return notificationTemplate;
 	};
 }
 
@@ -251,7 +201,7 @@ class NotificationCard extends Notification {
 		callback?: NotificationCallback,
 		configExtends?: NotificationConfig
 	) {
-		super(id, { title, message, colour }, NotificationSize.CARD);
+		super(id, { title, message, colour }, NotificationStyle.CARD);
 
 		for (const extension in configExtends) {
 			defaultConfig[extension] = {
@@ -266,13 +216,7 @@ class NotificationCard extends Notification {
 
 		this.callback = callback;
 
-		const [notificationStyle, notificationContainerStyle] =
-			this.getNotificationStyle();
-
-		this.notificationContainerStyle = notificationContainerStyle;
-		this.notificationStyle = notificationStyle;
-
-		this.setContent().closeHandler().enableDragging().show();
+		this.buildNotification().addCloseHandler().addDragging().show();
 	}
 
 	/**
@@ -280,10 +224,12 @@ class NotificationCard extends Notification {
 	 *
 	 * @returns The current notification for optional chaining.
 	 */
-	private readonly closeHandler = () => {
-		this.notification
-			.getElementsByClassName('close-btn')[0]
-			.addEventListener('click', () => this.hide());
+	private readonly addCloseHandler = () => {
+		const closeBtn = this.notification.getElementsByClassName('close-btn')[0];
+
+		if (closeBtn) {
+			closeBtn.addEventListener('click', () => this.hide());
+		}
 
 		return this;
 	};
@@ -378,7 +324,7 @@ class NotificationCard extends Notification {
 		)[0] as HTMLElement;
 
 		const body = this.notification.getElementsByClassName(
-			'pop-body-content'
+			'notify-card-body-content'
 		)[0] as HTMLElement;
 
 		const elementsExist = spinner && buttonContainer && body;
@@ -425,11 +371,30 @@ class NotificationCard extends Notification {
 	 *
 	 * @returns The current notification for optional chaining.
 	 */
-	private readonly setContent = () => {
-		this.notification.classList.value = this.notificationContainerStyle ?? '';
-		this.notification.innerHTML = this.notificationTemplate(
-			this.notificationStyle ?? ''
-		);
+	private readonly buildNotification = () => {
+		this.notification.classList.value =
+			'notify-card-container animated faster fixed w-full h-full items-center top-0 z-50 bg-gray-500 bg-opacity-50 flex content-center';
+		this.notification.innerHTML = cardNotificationTemplate;
+
+		const draggableBarElement = this.notification.getElementsByClassName(
+			'notify-card-title-bar'
+		)[0];
+		if (draggableBarElement) {
+			draggableBarElement.classList.add(`bg-${this.notificationColour}-500`);
+		}
+
+		const headerElement =
+			this.notification.getElementsByClassName('notify-card-title')[0];
+		if (headerElement) {
+			headerElement.textContent = this.notificationTitle ?? '';
+		}
+
+		const messageElement = this.notification.getElementsByClassName(
+			'notify-card-message'
+		)[0];
+		if (messageElement) {
+			messageElement.textContent = this.notificationMessage ?? '';
+		}
 
 		return this;
 	};
@@ -447,7 +412,7 @@ class NotificationCard extends Notification {
 	 */
 	public readonly setHTMLContent = (value: HTMLElement) => {
 		const body = this.notification.getElementsByClassName(
-			'pop-body-content'
+			'notify-card-body-content'
 		)[0] as HTMLElement;
 
 		if (body) {
@@ -469,7 +434,7 @@ class NotificationCard extends Notification {
 	 */
 	public readonly setTextContent = (value: string) => {
 		const body = this.notification.getElementsByClassName(
-			'pop-body-content'
+			'notify-card-body-content'
 		)[0] as HTMLElement;
 
 		if (body) {
@@ -573,7 +538,7 @@ class NotificationCard extends Notification {
 			}
 
 			this.notification
-				.getElementsByClassName('pop-body')[0]
+				.getElementsByClassName('notify-card-body')[0]
 				.append(buttonContainer);
 		});
 
@@ -582,7 +547,7 @@ class NotificationCard extends Notification {
 	 *
 	 * @returns The current notification for optional chaining.
 	 */
-	private readonly enableDragging = () => {
+	private readonly addDragging = () => {
 		const draggableElement = this.notification.firstElementChild as HTMLElement;
 		let child: HTMLElement;
 		let pos1 = 0,
@@ -659,7 +624,7 @@ class NotificationToast extends Notification {
 		position: NotificationPosition = NotificationPosition.LeftBottom,
 		timeout: number = 5000
 	) {
-		super(id, { message, colour }, NotificationSize.TOAST);
+		super(id, { message, colour }, NotificationStyle.TOAST);
 
 		this.timeout = timeout;
 
@@ -669,18 +634,9 @@ class NotificationToast extends Notification {
 		this.notificationPositionClass = positionClass;
 		this.notificationSlideDirection = slideDirection;
 
-		const [notificationStyle, notificationContainerStyle] =
-			this.getNotificationStyle();
-
-		this.notificationContainerStyle =
-			notificationContainerStyle + this.notificationPositionClass;
-		this.notificationStyle = notificationStyle;
-
 		this.expiration = setTimeout(() => this.hide(), this.timeout);
 
-		this.setContent();
-		this.closeHandler();
-		this.show();
+		this.buildNotification().addTimeoutAnimation().addCloseHandler().show();
 	}
 
 	/**
@@ -688,10 +644,40 @@ class NotificationToast extends Notification {
 	 *
 	 * @returns The current notification for optional chaining.
 	 */
-	private readonly closeHandler = () => {
-		this.notification
-			.getElementsByClassName('close-btn')[0]
-			.addEventListener('click', () => this.hide());
+	private readonly addCloseHandler = () => {
+		const closeBtn = this.notification.getElementsByClassName('close-btn')[0];
+
+		if (closeBtn) {
+			closeBtn.addEventListener('click', () => this.hide());
+		}
+
+		return this;
+	};
+
+	/**
+	 * A function to display the current time left on the notification timeout.
+	 *
+	 * @returns The current notification for optional chaining.
+	 */
+	private readonly addTimeoutAnimation = () => {
+		const timeoutBar = this.notification.getElementsByClassName(
+			'notify-toast-timeout'
+		)[0];
+
+		if (timeoutBar) {
+			timeoutBar.classList.add(`bg-${this.notificationColour}-400`);
+			timeoutBar.animate(
+				[
+					{
+						width: '100%',
+					},
+					{
+						width: '0px',
+					},
+				],
+				{ duration: this.timeout - 5, fill: 'forwards' }
+			);
+		}
 
 		return this;
 	};
@@ -748,11 +734,16 @@ class NotificationToast extends Notification {
 	 *
 	 * @returns The current notification for optional chaining.
 	 */
-	private readonly setContent = () => {
-		this.notification.classList.value = this.notificationContainerStyle ?? '';
-		this.notification.innerHTML = this.notificationTemplate(
-			this.notificationStyle ?? ''
-		);
+	private readonly buildNotification = () => {
+		this.notification.classList.value = `notify-toast-container absolute z-50 animated min-w-[24rem] mx-auto px-4 ${this.notificationPositionClass}`;
+		this.notification.innerHTML = toastNotificationTemplate;
+
+		const messageElement = this.notification.getElementsByClassName(
+			'notify-toast-message'
+		)[0];
+		if (messageElement) {
+			messageElement.textContent = this.notificationMessage ?? '';
+		}
 
 		return this;
 	};
