@@ -459,7 +459,6 @@ class NotificationCard extends Notification {
 		}
 
 		if (typeof this.callback !== 'undefined') {
-			console.log('CALLING BACK');
 			promises.push(this.callbackHandler());
 		}
 
@@ -477,7 +476,6 @@ class NotificationCard extends Notification {
 	private readonly callbackHandler = () =>
 		new Promise<any>((resolve, reject) => {
 			if (typeof this.callback === 'function') {
-				console.log("THIS REALLY DOESN'T MAKE SENSE");
 				this.callback(resolve, reject, this);
 			}
 		});
