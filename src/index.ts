@@ -1,16 +1,19 @@
 import './min.css';
 
-type NotificationConfig = {
-	[key: string]: {
-		options?: string[];
-		colour?: NotificationColour;
-		close?: boolean;
-		promise?: {
-			ACTION: string;
-		};
-		reload?: boolean;
-		callback?: NotificationCallback;
+type ButtonConfiguration = {
+	value?: string;
+	options?: string[];
+	colour?: NotificationColour;
+	close?: boolean;
+	promise?: {
+		ACTION: string;
 	};
+	reload?: boolean;
+	callback?: NotificationCallback;
+};
+
+type NotificationConfig = {
+	[key: string]: ButtonConfiguration;
 };
 
 type NotificationOptions = {
@@ -59,63 +62,50 @@ export enum NotificationPosition {
 }
 
 export enum NotificationColour {
-	RED = 'red',
-	GREEN = 'green',
+	AMBER = 'amber',
 	BLUE = 'blue',
-	YELLOW = 'yellow',
+	EMERALD = 'emerald',
+	GREEN = 'green',
+	RED = 'red',
 	ORANGE = 'orange',
 	PURPLE = 'purple',
 	SKY = 'sky',
-	EMERALD = 'emerald',
-	AMBER = 'amber',
 	VIOLET = 'violet',
+	YELLOW = 'yellow',
 }
 
 const maxNotificationTemplate: string = `
-	<div class="leading-loose w-1/4 REPLACE_STYLE dark:bg-slate-500">
+	<div class="w-1/4 min-w-52 REPLACE_STYLE">
 		<div
 			draggable="true"
-			class="cursor-grab active:cursor-grabbing w-full flex justify-end bg-REPLACE_COLOUR-500 dark:bg-REPLACE_COLOUR-600 p-1 rounded-t"
-		>			
-			<svg
-				class="close-btn cursor-pointer"
-				height="21"
-				viewBox="0 0 21 21"
-				width="21"
-				xmlns="http://www.w3.org/2000/svg"
-			>
-				<g
-					class="fill-current text-red-300 dark:text-red-400 hover:fill-current hover:text-red-400 hover:dark:text-red-600"
-					fill-rule="evenodd"
-					stroke="#2a2e3b"
-					stroke-linecap="round"
-					stroke-linejoin="round"
-					transform="translate(2 2)"
-				>
-					<circle cx="8.5" cy="8.5" r="8"></circle>
-					<g transform="matrix(0 1 -1 0 17 0)">
-						<path d="m5.5 11.5 6-6"></path>
-						<path d="m5.5 5.5 6 6"></path>
-					</g>
-				</g>
-			</svg>
-		</div>
-		<h1 id="pop-title" class="p-1 mt-2 font-bold w-11/12 text-left border-b tracking-wide font-sans">
-			REPLACE_TITLE
-		</h1>
-		<div hidden="true" class="loading-spinner animated py-4" role="status">
-			<div class="my-8 flex flex-row gap-2">
-				<span class="w-4 h-4 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 shadow animate-bounce"></span>
-				<span class="w-4 h-4 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 shadow animate-bounce [animation-delay:-.3s]"></span>
-				<span class="w-4 h-4 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 shadow animate-bounce [animation-delay:-.5s]"></span>
-				<span class="sr-only">Loading...</span>
-			</div>
-		</div>
-		<p
-			class="pop-body-content font-sans animated fast p-2 w-11/12 text-left text-black dark:text-white text-semi-bold"
+			class="cursor-grab active:cursor-grabbing w-full flex justify-between bg-REPLACE_COLOUR-500 rounded-t items-center p-2"
 		>
-			REPLACE_MESSAGE
-		</p>
+			<h1 id="pop-title" class="ml-1 text-white font-semibold w-full text-left tracking-wide font-sans truncate uppercase antialiased">
+				REPLACE_TITLE
+			</h1>
+			<button aria-label="Close Popup" type="button" class="close-btn w-5 h-5 rounded bg-red-400 hover:bg-red-500 flex items-center justify-around">
+				<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e8eaed"><path d="m291-240-51-51 189-189-189-189 51-51 189 189 189-189 51 51-189 189 189 189-51 51-189-189-189 189Z"/></svg>
+			</button>
+		</div>
+		<div class="pop-body w-full h-auto flex flex-col gap-2 min-h-8 p-2">
+			<div hidden="true" class="loading-spinner animated py-4 w-full" role="status">
+				<div class="flex items-center justify-around"> 
+					<div class="my-8 flex flex-row gap-2">
+						<span class="w-4 h-4 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 shadow animate-bounce"></span>
+						<span class="w-4 h-4 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 shadow animate-bounce [animation-delay:-.3s]"></span>
+						<span class="w-4 h-4 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 shadow animate-bounce [animation-delay:-.5s]"></span>
+						<span class="sr-only">Loading...</span>
+					</div>
+				</div>
+			</div>
+			<div class="pop-body-content w-full h-auto px-2 animated fast text-black dark:text-white">
+				<p
+					class="leading-snug font-sansmt-1 text-left"
+				>
+					REPLACE_MESSAGE
+				</p>
+			<div>
+		</div>
 	</div>
 `;
 
@@ -208,13 +198,13 @@ class Notification {
 	getNotificationStyle = (): string[] => {
 		if (this.notificationSize === NotificationSize.TOAST) {
 			return [
-				`pop-min flex flex-col items-center justify-center bg-white dark:bg-slate-700 rounded text-black dark:text-white text-md px-4 py-2 shadow-xl min-h-[5rem] border-t-4 border-${this.notificationColour}-500 dark:border-${this.notificationColour}-700`,
+				`pop-min flex flex-col items-center justify-center bg-white dark:bg-zinc-900 rounded text-black dark:text-white text-md px-4 py-2 shadow-xl min-h-[4rem] border-t-4 border-${this.notificationColour}-500 dark:border-${this.notificationColour}-700`,
 				'popup-cont absolute z-50 animated min-w-[24rem] mx-auto px-4 ',
 			];
 		}
 
 		return [
-			`pop-max animated bounceIn items-center flex flex-col max-w-sm mx-auto text-center text-md bg-white dark:bg-slate-700 rounded shadow text-${this.notificationColour}-500 dark:text-${this.notificationColour}-100`,
+			`pop-max animated bounceIn items-center flex flex-col max-w-sm mx-auto text-center text-md bg-white dark:bg-zinc-900 rounded rounded-t-xl shadow-xl text-${this.notificationColour}-500 dark:text-${this.notificationColour}-30`,
 			'popup-cont-x animated faster fixed w-full h-full items-center top-0 z-50 bg-gray-500 bg-opacity-50 flex content-center',
 		];
 	};
@@ -530,9 +520,14 @@ class NotificationCard extends Notification {
 	private readonly buttonHandler = async () =>
 		new Promise<any>((resolve, reject) => {
 			const buttonContainer = document.createElement('div');
-			buttonContainer.classList.value = `btn-cont animated w-full flex justify-around ${
-				this.notificationSize === NotificationSize.CARD ? 'p-4' : 'p-2'
-			}`;
+			buttonContainer.classList.value = `btn-cont animated w-full flex gap-2 justify-around flex-wrap p-2`;
+
+			this.notification
+				.getElementsByClassName('close-btn')[0]
+				.addEventListener('click', () => {
+					this.hide();
+					return resolve({ ACTION: 'Dismissed' });
+				});
 
 			const buttonConfigurations =
 				this.notificationButtons
@@ -547,40 +542,26 @@ class NotificationCard extends Notification {
 					})
 					.filter((value) => value) ?? [];
 
-			this.notification
-				.getElementsByClassName('close-btn')[0]
-				.addEventListener('click', () => {
-					this.hide();
-					return resolve({ ACTION: 'Dismissed' });
-				});
+			for (const buttonConfiguration of buttonConfigurations) {
+				const { colour, value, promise, reload, close, callback } =
+					buttonConfiguration as ButtonConfiguration;
 
-			for (const [index, buttonConfiguration] of buttonConfigurations.entries()) {
 				const button = document.createElement('button');
-				const buttonColour = buttonConfiguration?.colour;
-				const buttonValue = buttonConfiguration?.value;
-				const buttonPromise = buttonConfiguration?.promise;
-				const buttonReload = buttonConfiguration?.reload;
-				const buttonClose = buttonConfiguration?.close;
-				const buttonCallback = buttonConfiguration?.callback;
-
-				button.innerHTML = buttonValue ?? '';
+				button.innerHTML = value ?? '';
 				button.type = 'button';
-				button.tabIndex = index + 1;
-				button.setAttribute(
-					'class',
-					`${buttonValue} w-auto min-w-24 focus:outline-none text-${buttonColour}-400 border-${buttonColour}-400 rounded-full border hover:bg-${buttonColour}-400 focus:bg-${buttonColour}-400 hover:text-${buttonColour}-100 focus:text-${buttonColour}-100 px-2`
-				);
+				button.ariaLabel = `Option: ${value}`;
+				button.classList.value = `${value} grow min-w-24 text-${colour}-600 dark:text-${colour}-400 hover:text-white focus:text-white border border-${colour}-400 rounded hover:bg-${colour}-500 focus:bg-${colour}-500 p-2`;
 
 				button.addEventListener('click', () => {
 					switch (true) {
-						case !!buttonCallback:
-							return buttonCallback(resolve, reject, this);
-						case buttonReload:
+						case !!callback:
+							return callback(resolve, reject, this);
+						case reload:
 							return window.location.reload();
-						case !!buttonPromise:
+						case !!promise:
 							this.fadeOut();
-							return resolve(buttonPromise);
-						case buttonClose:
+							return resolve(promise);
+						case close:
 							this.fadeOut();
 							return resolve({ ACTION: 'Dismissed' });
 						default:
@@ -591,7 +572,9 @@ class NotificationCard extends Notification {
 				buttonContainer.append(button);
 			}
 
-			this.notification.children[0].append(buttonContainer);
+			this.notification
+				.getElementsByClassName('pop-body')[0]
+				.append(buttonContainer);
 		});
 
 	/**
