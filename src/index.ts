@@ -133,7 +133,7 @@ const cardNotificationTemplate: string = `
 `;
 
 const toastNotificationTemplate: string = `
-	<div class="notify-toast w-full bg-white dark:bg-zinc-900 border-2 border-b-0 border-zinc-100 dark:border-zinc-800 rounded text-black dark:text-white text-md shadow-xl min-h-[4rem] flex flex-col justify-between">
+	<div draggable="true" class="notify-toast w-full bg-white dark:bg-zinc-900 border-2 border-b-0 border-zinc-100 dark:border-zinc-800 rounded text-black dark:text-white text-md shadow-xl min-h-[4rem] flex flex-col justify-between">
 		<div class="w-full flex justify-between items-center select-none px-4 py-2">
 			<p class="notify-toast-message py-2 w-11/12 text-left text-semi-bold text-ellipsis"></p>
 			<svg class="close-btn cursor-pointer fill-current text-red-300 dark:text-red-400 hover:fill-current hover:text-red-400 hover:dark:text-red-600 w-1/12" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e8eaed"><path d="M480-416.35 287.83-224.17Q275.15-211.5 256-211.5t-31.83-12.67Q211.5-236.85 211.5-256t12.67-31.83L416.35-480 224.17-672.17Q211.5-684.85 211.5-704t12.67-31.83Q236.85-748.5 256-748.5t31.83 12.67L480-543.65l192.17-192.18Q684.85-748.5 704-748.5t31.83 12.67Q748.5-723.15 748.5-704t-12.67 31.83L543.65-480l192.18 192.17Q748.5-275.15 748.5-256t-12.67 31.83Q723.15-211.5 704-211.5t-31.83-12.67L480-416.35Z"/></svg>
@@ -183,6 +183,45 @@ class Notification {
 		this.notification.parentNode?.removeChild(this.notification);
 
 		notifications.delete(this.id);
+	};
+
+	/**
+	 * A function to fade in the notification.
+	 *
+	 * @example
+	 * await Card({callback: async (_resolve, _reject, notification) => {setTimeout(() => notification.fadeIn()), 5000);}})
+	 *
+	 * @returns The current notification for optional chaining.
+	 */
+	public fadeIn = () => {
+		this.notification.classList.toggle('hidden', false);
+		this.notification.classList.add('fadeIn');
+
+		this.notification.addEventListener('animationend', () => {
+			this.notification.classList.remove('fadeIn');
+		});
+
+		return this;
+	};
+
+	/**
+	 * A function to fade out the notification and remove it.
+	 *
+	 * @example
+	 * await Card({callback: async (_resolve, _reject, notification) => {setTimeout(() => notification.fadeOut()), 5000);}})
+	 *
+	 * @returns The current notification for optional chaining.
+	 */
+	public fadeOut = () => {
+		this.notification.classList.add('fadeOut');
+
+		this.notification.addEventListener('animationend', () => {
+			this.notification.classList.toggle('hidden', true);
+
+			this.delete();
+		});
+
+		return this;
 	};
 }
 
@@ -259,45 +298,6 @@ class NotificationCard extends Notification {
 	 */
 	public hide = () => {
 		this.fadeOut();
-
-		return this;
-	};
-
-	/**
-	 * A function to fade in the notification.
-	 *
-	 * @example
-	 * await Card({callback: async (_resolve, _reject, notification) => {setTimeout(() => notification.fadeIn()), 5000);}})
-	 *
-	 * @returns The current notification for optional chaining.
-	 */
-	public fadeIn = () => {
-		this.notification.classList.toggle('hidden', false);
-		this.notification.classList.add('fadeIn');
-
-		this.notification.addEventListener('animationend', () => {
-			this.notification.classList.remove('fadeIn');
-		});
-
-		return this;
-	};
-
-	/**
-	 * A function to fade out the notification and remove it.
-	 *
-	 * @example
-	 * await Card({callback: async (_resolve, _reject, notification) => {setTimeout(() => notification.fadeOut()), 5000);}})
-	 *
-	 * @returns The current notification for optional chaining.
-	 */
-	public fadeOut = () => {
-		this.notification.classList.add('fadeOut');
-
-		this.notification.addEventListener('animationend', () => {
-			this.notification.classList.toggle('hidden', true);
-
-			this.delete();
-		});
 
 		return this;
 	};
@@ -548,8 +548,12 @@ class NotificationCard extends Notification {
 	 * @returns The current notification for optional chaining.
 	 */
 	private readonly addDragging = () => {
-		const draggableElement = this.notification.firstElementChild as HTMLElement;
-		let child: HTMLElement;
+		const notification = this.notification.firstElementChild as HTMLElement;
+
+		const draggableTitleBar = notification.getElementsByClassName(
+			'notify-card-title-bar'
+		)[0] as HTMLElement;
+
 		let pos1 = 0,
 			pos2 = 0,
 			pos3 = 0,
@@ -558,18 +562,18 @@ class NotificationCard extends Notification {
 		const startDrag = (e: MouseEvent) => {
 			e.preventDefault();
 
-			draggableElement.dispatchEvent(new Event('dragstart'));
+			notification.dispatchEvent(new Event('dragstart'));
 
 			pos1 = e.clientX;
 			pos2 = e.clientY;
 			pos3 = pos1 - e.clientX;
 			pos4 = pos2 - e.clientY;
 
-			draggableElement.style.left = draggableElement.offsetLeft - pos3 + 'px';
-			draggableElement.style.top = draggableElement.offsetTop - pos4 + 'px';
+			notification.style.left = notification.offsetLeft - pos3 + 'px';
+			notification.style.top = notification.offsetTop - pos4 + 'px';
 
-			if (!draggableElement.classList.contains('absolute')) {
-				draggableElement.classList.add('absolute');
+			if (!notification.classList.contains('absolute')) {
+				notification.classList.add('absolute');
 			}
 
 			document.onmouseup = endDrag;
@@ -584,28 +588,18 @@ class NotificationCard extends Notification {
 			pos1 = e.clientX;
 			pos2 = e.clientY;
 
-			draggableElement.style.left = draggableElement.offsetLeft - pos3 + 'px';
-			draggableElement.style.top = draggableElement.offsetTop - pos4 + 'px';
+			notification.style.left = notification.offsetLeft - pos3 + 'px';
+			notification.style.top = notification.offsetTop - pos4 + 'px';
 		};
 
 		const endDrag = () => {
-			draggableElement.dispatchEvent(new Event('dragend'));
+			notification.dispatchEvent(new Event('dragend'));
 
 			document.onmouseup = null;
 			document.onmousemove = null;
 		};
 
-		for (const elementChild of draggableElement.children) {
-			draggableElement.getBoundingClientRect();
-
-			child = elementChild as HTMLElement;
-
-			if (child.draggable) {
-				child.onmousedown = startDrag;
-			} else {
-				continue;
-			}
-		}
+		draggableTitleBar.onmousedown = startDrag;
 
 		return this;
 	};
@@ -636,7 +630,11 @@ class NotificationToast extends Notification {
 
 		this.expiration = setTimeout(() => this.hide(), this.timeout);
 
-		this.buildNotification().addTimeoutAnimation().addCloseHandler().show();
+		this.buildNotification()
+			.addTimeoutAnimation()
+			.addCloseHandler()
+			.addSwipeToDismiss()
+			.show();
 	}
 
 	/**
@@ -778,6 +776,68 @@ class NotificationToast extends Notification {
 
 			this.delete();
 		});
+
+		return this;
+	};
+
+	/**
+	 * A function that enables the notification to be draggable.
+	 *
+	 * @returns The current notification for optional chaining.
+	 */
+	private readonly addSwipeToDismiss = () => {
+		const notification = this.notification;
+		let pos1 = 0,
+			pos2 = 0;
+
+		const startDrag = (e: MouseEvent) => {
+			e.preventDefault();
+
+			notification.dispatchEvent(new Event('dragstart'));
+
+			pos1 = e.clientX;
+			pos2 = pos1 - e.clientX;
+
+			notification.style.left = notification.offsetLeft - pos2 + 'px';
+
+			document.onmouseup = endDrag;
+			document.onmousemove = dragging;
+		};
+
+		const dragging = (e: MouseEvent): any => {
+			e.preventDefault();
+
+			pos2 = pos1 - e.clientX;
+			pos1 = e.clientX;
+
+			let opacity: number = 100;
+			if (pos1 > 250) {
+				opacity = 100 - (pos1 - 250);
+			} else if (pos1 < 100) {
+				opacity = pos1;
+			}
+
+			if (opacity < 0) {
+				cleanup();
+				this.delete();
+			} else {
+				this.notification.style.opacity = `${opacity}%`;
+				notification.style.left = notification.offsetLeft - pos2 + 'px';
+			}
+		};
+
+		const endDrag = () => {
+			this.notification.style.left = '0px';
+			this.notification.style.opacity = '100%';
+		};
+
+		const cleanup = () => {
+			notification.dispatchEvent(new Event('dragend'));
+			document.onmouseup = null;
+			document.onmousemove = null;
+		};
+
+		notification.onmousedown = startDrag;
 
 		return this;
 	};
