@@ -414,19 +414,41 @@ class NotificationCard extends Notification {
 	 * This can be used within the callback function e.g:
 	 * @example
 	 * const div = document.createElement('div');
-	 * await Card({callback: async (_resolve, _reject, notification) => notification.setTextContent(div)})
+	 * await Card({callback: async (_resolve, _reject, notification) => notification.setBodyHTMLContent(div)})
 	 *
 	 * @param HTMLElement - A value to set the body of the notification to.
 	 *
 	 * @returns The current notification for optional chaining.
 	 */
-	public readonly setHTMLContent = (value: HTMLElement) => {
+	public readonly setBodyHTMLContent = (value: HTMLElement) => {
 		const body = this.notification.getElementsByClassName(
 			'notify-card-body-content'
 		)[0] as HTMLElement;
 
 		if (body) {
 			body.innerHTML = value.outerHTML;
+		}
+
+		return this;
+	};
+
+	/**
+	 * A function to update the title content of the current notification.
+	 * This can be used within the callback function e.g:
+	 * @example
+	 * await Card({callback: async (_resolve, _reject, notification) => notification.setTitleContent("test!")})
+	 *
+	 * @param string - A value to set the title of the notification to.
+	 *
+	 * @returns The current notification for optional chaining.
+	 */
+	public readonly setTitleContent = (value: string) => {
+		const headerElement = this.notification.getElementsByClassName(
+			'notify-card-title'
+		)[0] as HTMLElement;
+
+		if (headerElement) {
+			headerElement.textContent = value;
 		}
 
 		return this;
