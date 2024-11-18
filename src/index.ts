@@ -133,7 +133,7 @@ const cardNotificationTemplate: string = `
 `;
 
 const toastNotificationTemplate: string = `
-	<div draggable="true" class="notify-toast w-full bg-white dark:bg-zinc-900 border-2 border-b-0 border-zinc-100 dark:border-zinc-800 rounded text-black dark:text-white text-md shadow-xl min-h-[4rem] flex flex-col justify-between">
+	<div draggable="true" class="notify-toast cursor-grab active:cursor-grabbing w-full bg-white dark:bg-zinc-900 border-2 border-b-0 border-zinc-100 dark:border-zinc-800 rounded text-black dark:text-white text-md shadow-xl min-h-[4rem] flex flex-col justify-between">
 		<div class="w-full flex justify-between items-center select-none px-4 py-2">
 			<p class="notify-toast-message py-2 w-11/12 text-left text-semi-bold text-ellipsis"></p>
 			<svg class="close-btn cursor-pointer fill-current text-red-300 dark:text-red-400 hover:fill-current hover:text-red-400 hover:dark:text-red-600 w-1/12" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e8eaed"><path d="M480-416.35 287.83-224.17Q275.15-211.5 256-211.5t-31.83-12.67Q211.5-236.85 211.5-256t12.67-31.83L416.35-480 224.17-672.17Q211.5-684.85 211.5-704t12.67-31.83Q236.85-748.5 256-748.5t31.83 12.67L480-543.65l192.17-192.18Q684.85-748.5 704-748.5t31.83 12.67Q748.5-723.15 748.5-704t-12.67 31.83L543.65-480l192.18 192.17Q748.5-275.15 748.5-256t-12.67 31.83Q723.15-211.5 704-211.5t-31.83-12.67L480-416.35Z"/></svg>

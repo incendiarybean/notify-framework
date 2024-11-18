@@ -1,0 +1,4 @@
+{
+	"watch": ["./src/base.css", "./src/index.ts"],
+	"verbose": true
+}
