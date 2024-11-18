@@ -104,10 +104,10 @@ const defaultConfig: NotificationConfig = {
 };
 
 const cardNotificationTemplate: string = `
-	<div class="notify-card w-1/4 min-w-52 animated bounceIn items-center flex flex-col max-w-md mx-auto text-center text-md bg-white dark:bg-zinc-900 rounded rounded-t-xl shadow-xl">
+	<div class="notify-card w-1/4 min-w-[20rem] animated bounceIn items-center flex flex-col max-w-md mx-auto text-center text-md bg-white dark:bg-zinc-900 rounded shadow-xl overflow-hidden">
 		<div
 			draggable="true"
-			class="notify-card-title-bar cursor-grab active:cursor-grabbing w-full flex justify-between rounded-t items-center p-2"
+			class="notify-card-title-bar cursor-grab active:cursor-grabbing w-full flex justify-between items-center p-2"
 		>
 			<h1 class="notify-card-title ml-1 text-white font-semibold w-full text-left tracking-wide font-sans truncate uppercase antialiased"></h1>
 			<button aria-label="Close Popup" type="button" class="close-btn w-5 h-5 rounded bg-red-400 hover:bg-red-500 flex items-center justify-around">
@@ -184,6 +184,59 @@ class Notification {
 
 		notifications.delete(this.id);
 	};
+}
+
+class NotificationCard extends Notification {
+	private readonly notificationConfig: NotificationConfig;
+	private readonly callback?: NotificationCallback;
+	private readonly notificationButtons?: string[];
+	private loading: boolean = false;
+
+	constructor(
+		id: number,
+		title: string,
+		message?: string,
+		colour: NotificationColour = NotificationColour.BLUE,
+		buttons?: string[],
+		callback?: NotificationCallback,
+		configExtends?: NotificationConfig
+	) {
+		super(id, { title, message, colour }, NotificationStyle.CARD);
+		const configCopy = { ...defaultConfig };
+		for (const extension in configExtends) {
+			configCopy[extension] = {
+				...configCopy[extension],
+				...configExtends[extension],
+			};
+		}
+
+		this.notificationConfig = configCopy;
+
+		this.notificationButtons = buttons;
+
+		this.callback = callback;
+
+		this.buildNotification()
+			.addCloseHandler()
+			.addDragging()
+			.addWindowHandler()
+			.show();
+	}
+
+	/**
+	 * A function to enable the close button on the notification.
+	 *
+	 * @returns The current notification for optional chaining.
+	 */
+	private readonly addCloseHandler = () => {
+		const closeBtn = this.notification.getElementsByClassName('close-btn')[0];
+
+		if (closeBtn) {
+			closeBtn.addEventListener('click', () => this.hide());
+		}
+
+		return this;
+	};
 
 	/**
 	 * A function to fade in the notification.
@@ -223,55 +276,6 @@ class Notification {
 
 		return this;
 	};
-}
-
-class NotificationCard extends Notification {
-	private readonly notificationConfig: NotificationConfig;
-	private readonly callback?: NotificationCallback;
-	private readonly notificationButtons?: string[];
-	private loading: boolean = false;
-
-	constructor(
-		id: number,
-		title: string,
-		message?: string,
-		colour: NotificationColour = NotificationColour.BLUE,
-		buttons?: string[],
-		callback?: NotificationCallback,
-		configExtends?: NotificationConfig
-	) {
-		super(id, { title, message, colour }, NotificationStyle.CARD);
-		const configCopy = { ...defaultConfig };
-		for (const extension in configExtends) {
-			configCopy[extension] = {
-				...configCopy[extension],
-				...configExtends[extension],
-			};
-		}
-
-		this.notificationConfig = configCopy;
-
-		this.notificationButtons = buttons;
-
-		this.callback = callback;
-
-		this.buildNotification().addCloseHandler().addDragging().show();
-	}
-
-	/**
-	 * A function to enable the close button on the notification.
-	 *
-	 * @returns The current notification for optional chaining.
-	 */
-	private readonly addCloseHandler = () => {
-		const closeBtn = this.notification.getElementsByClassName('close-btn')[0];
-
-		if (closeBtn) {
-			closeBtn.addEventListener('click', () => this.hide());
-		}
-
-		return this;
-	};
 
 	/**
 	 * An alias to the fadeIn function to fade in the notification.
@@ -298,6 +302,8 @@ class NotificationCard extends Notification {
 	 */
 	public hide = () => {
 		this.fadeOut();
+
+		window.onresize = null;
 
 		return this;
 	};
@@ -357,11 +363,13 @@ class NotificationCard extends Notification {
 					body.classList.remove('fadeIn');
 				});
 
-				// Show buttons
-				buttonContainer.classList.add('flex', 'fadeIn');
-				buttonContainer.addEventListener('animationend', () => {
-					buttonContainer.classList.remove('fadeIn');
-				});
+				if (buttonContainer) {
+					// Show buttons
+					buttonContainer.classList.add('flex', 'fadeIn');
+					buttonContainer.addEventListener('animationend', () => {
+						buttonContainer.classList.remove('fadeIn');
+					});
+				}
 			});
 		}
 
@@ -526,10 +534,10 @@ class NotificationCard extends Notification {
 						case reload:
 							return window.location.reload();
 						case !!promise:
-							this.fadeOut();
+							this.hide();
 							return resolve(promise);
 						case close:
-							this.fadeOut();
+							this.hide();
 							return resolve({ ACTION: 'Dismissed' });
 						default:
 							return reject(Error('No handler was attached to this button.'));
@@ -545,6 +553,37 @@ class NotificationCard extends Notification {
 		});
 
 	/**
+	 * A function that enables the Notification to adjust based on window size
+	 *
+	 * @returns The current notification for optional chaining.
+	 */
+	private readonly addWindowHandler = () => {
+		// If window is resized, ensure the Notification remains on screen
+		window.onresize = () => {
+			const notification = this.notification.firstElementChild as HTMLElement;
+			const notificationBounds = notification.getBoundingClientRect();
+
+			if (
+				notificationBounds.x + notificationBounds.width > window.innerWidth &&
+				notificationBounds.x > 1
+			) {
+				notification.style.left =
+					window.innerWidth - notificationBounds.width - 1 + 'px';
+			}
+
+			if (
+				notificationBounds.y + notificationBounds.height > window.innerHeight &&
+				notificationBounds.y > 1
+			) {
+				notification.style.top =
+					window.innerHeight - notificationBounds.height - 1 + 'px';
+			}
+		};
+
+		return this;
+	};
+
+	/**
 	 * A function that enables the notification to be draggable.
 	 *
 	 * @returns The current notification for optional chaining.
@@ -556,42 +595,58 @@ class NotificationCard extends Notification {
 			'notify-card-title-bar'
 		)[0] as HTMLElement;
 
-		let pos1 = 0,
-			pos2 = 0,
-			pos3 = 0,
-			pos4 = 0;
+		let mouseDragPositionLeft = 0,
+			mouseDragPositionTop = 0,
+			mouseDragDistanceX = 0,
+			mouseDragDistanceY = 0;
 
 		const startDrag = (e: MouseEvent) => {
 			e.preventDefault();
 
 			notification.dispatchEvent(new Event('dragstart'));
 
-			pos1 = e.clientX;
-			pos2 = e.clientY;
-			pos3 = pos1 - e.clientX;
-			pos4 = pos2 - e.clientY;
+			mouseDragPositionLeft = e.clientX;
+			mouseDragPositionTop = e.clientY;
+			mouseDragDistanceX = mouseDragPositionLeft - e.clientX;
+			mouseDragDistanceY = mouseDragPositionTop - e.clientY;
 
-			notification.style.left = notification.offsetLeft - pos3 + 'px';
-			notification.style.top = notification.offsetTop - pos4 + 'px';
+			notification.style.left =
+				notification.offsetLeft - mouseDragDistanceX + 'px';
+			notification.style.top = notification.offsetTop - mouseDragDistanceY + 'px';
 
-			if (!notification.classList.contains('absolute')) {
-				notification.classList.add('absolute');
-			}
+			// Make the notification absolute to retain current position
+			notification.classList.add('absolute');
 
-			document.onmouseup = endDrag;
 			document.onmousemove = dragging;
+			document.onmouseup = endDrag;
 		};
 
 		const dragging = (e: MouseEvent): any => {
 			e.preventDefault();
 
-			pos3 = pos1 - e.clientX;
-			pos4 = pos2 - e.clientY;
-			pos1 = e.clientX;
-			pos2 = e.clientY;
+			const screenBound = this.notification.getBoundingClientRect();
+			const notificationBounds = notification.getBoundingClientRect();
 
-			notification.style.left = notification.offsetLeft - pos3 + 'px';
-			notification.style.top = notification.offsetTop - pos4 + 'px';
+			mouseDragDistanceX = mouseDragPositionLeft - e.clientX;
+			mouseDragDistanceY = mouseDragPositionTop - e.clientY;
+			mouseDragPositionLeft = e.clientX;
+			mouseDragPositionTop = e.clientY;
+
+			const nextXPosition = notification.offsetLeft - mouseDragDistanceX;
+			const nextYPosition = notification.offsetTop - mouseDragDistanceY;
+
+			if (
+				nextXPosition < screenBound.left ||
+				nextYPosition < screenBound.top ||
+				nextXPosition + notificationBounds.width > screenBound.right ||
+				nextYPosition + notificationBounds.height > screenBound.bottom
+			) {
+				// Don't move the notification if it's outside bounds
+			} else {
+				notification.style.left =
+					notification.offsetLeft - mouseDragDistanceX + 'px';
+				notification.style.top = notification.offsetTop - mouseDragDistanceY + 'px';
+			}
 		};
 
 		const endDrag = () => {
@@ -611,6 +666,7 @@ class NotificationToast extends Notification {
 	private readonly timeout: number;
 	private readonly expiration: ReturnType<typeof setTimeout> | undefined;
 	private readonly notificationSlideDirection: NotificationSlideDirection;
+	private readonly notificationPosition: NotificationPosition;
 	private readonly notificationPositionClass: string;
 
 	constructor(
@@ -627,6 +683,7 @@ class NotificationToast extends Notification {
 		const [positionClass, slideDirection] =
 			this.getNotificationPosition(position);
 
+		this.notificationPosition = position;
 		this.notificationPositionClass = positionClass;
 		this.notificationSlideDirection = slideDirection;
 
@@ -735,7 +792,7 @@ class NotificationToast extends Notification {
 	 * @returns The current notification for optional chaining.
 	 */
 	private readonly buildNotification = () => {
-		this.notification.classList.value = `notify-toast-container absolute z-50 animated min-w-[24rem] mx-auto px-4 ${this.notificationPositionClass}`;
+		this.notification.classList.value = `notify-toast-container fixed z-40 animated min-w-[24rem] mx-auto px-4 ${this.notificationPositionClass}`;
 		this.notification.innerHTML = toastNotificationTemplate;
 
 		const messageElement = this.notification.getElementsByClassName(
@@ -788,58 +845,63 @@ class NotificationToast extends Notification {
 	 * @returns The current notification for optional chaining.
 	 */
 	private readonly addSwipeToDismiss = () => {
-		const notification = this.notification;
-		let pos1 = 0,
-			pos2 = 0;
+		let mouseDragPositionLeft = 0,
+			mouseDragDistance = 0;
 
 		const startDrag = (e: MouseEvent) => {
 			e.preventDefault();
+			this.notification.dispatchEvent(new Event('dragstart'));
 
-			notification.dispatchEvent(new Event('dragstart'));
+			mouseDragPositionLeft = e.clientX;
+			mouseDragDistance = mouseDragPositionLeft - e.clientX;
 
-			pos1 = e.clientX;
-			pos2 = pos1 - e.clientX;
-
-			notification.style.left = notification.offsetLeft - pos2 + 'px';
-
-			document.onmouseup = endDrag;
 			document.onmousemove = dragging;
+			document.onmouseup = endDrag;
 		};
 
 		const dragging = (e: MouseEvent): any => {
 			e.preventDefault();
+			mouseDragDistance = mouseDragPositionLeft - e.clientX;
 
-			pos2 = pos1 - e.clientX;
-			pos1 = e.clientX;
-
-			let opacity: number = 100;
-			if (pos1 > 250) {
-				opacity = 100 - (pos1 - 250);
-			} else if (pos1 < 100) {
-				opacity = pos1;
+			if (
+				[NotificationPosition.RightBottom, NotificationPosition.RightTop].includes(
+					this.notificationPosition
+				)
+			) {
+				this.notification.style.right = mouseDragDistance + 'px';
+			} else {
+				this.notification.style.left = -mouseDragDistance + 'px';
 			}
 
-			if (opacity < 0) {
-				cleanup();
+			// Calculate the opacity based on distance dragged
+			const dragPercentage =
+				100 - Math.ceil(Math.abs(mouseDragDistance / 250) * 100);
+			this.notification.style.opacity = `${dragPercentage}%`;
+			if (dragPercentage < 0) {
 				this.delete();
-			} else {
-				this.notification.style.opacity = `${opacity}%`;
-				notification.style.left = notification.offsetLeft - pos2 + 'px';
 			}
 		};
 
 		const endDrag = () => {
-			this.notification.style.left = '0px';
-			this.notification.style.opacity = '100%';
-		};
+			this.notification.dispatchEvent(new Event('dragend'));
 
-		const cleanup = () => {
-			notification.dispatchEvent(new Event('dragend'));
+			if (
+				[NotificationPosition.RightBottom, NotificationPosition.RightTop].includes(
+					this.notificationPosition
+				)
+			) {
+				this.notification.style.right = '0px';
+			} else {
+				this.notification.style.left = '0px';
+			}
+
+			this.notification.style.opacity = '100%';
+
 			document.onmouseup = null;
 			document.onmousemove = null;
 		};
 
-		notification.onmousedown = startDrag;
+		this.notification.onmousedown = startDrag;
 
 		return this;
 	};
